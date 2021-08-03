@@ -87,12 +87,28 @@ Definition left_rotate (t: tree) : tree :=
   | _ => t
   end.
 
+Theorem left_rotate_BST: forall (v: nat) (t : tree),
+  BST t -> BST (left_rotate t).
+Proof.
+  intros v t. induction t as [| v' l' IHl' r' IHr'].
+  - simpl. intros H. apply H.
+  - intros H. destruct l' as [| v2' l2' r2'];
+    destruct r' as [| v1' l1' r1']; simpl.
+    + apply H.
+    + apply BST_Node.
+      * admit.
+Admitted.
+
 Definition right_rotate (t: tree) : tree :=
   match t with
   | Node v1 (Node v2 l2 r2) r1 => Node v2 l2 (Node v1 r2 r1)
   | _ => t
   end.
-    
+
+Theorem right_rotate_BST: forall (v: nat) (t : tree),
+  BST t -> BST (right_rotate t).
+Proof.
+Admitted.
 
 Inductive Diff : Type :=
   | Neutral
@@ -132,7 +148,7 @@ Definition eqb_diff (d1 d2 : Diff) : bool :=
   | _, _                   => false
   end.
 
-Lemma diff_neutral : forall v l r,
+Lemma diff_Neutral : forall v l r,
   diff (Node v l r) = Neutral <-> height l = height r.
 Proof.
   intros. split.
@@ -154,23 +170,109 @@ Proof.
     destruct (height l =? height r). discriminate.
     destruct (height l =? S (height r)) eqn: E. 
     apply Nat.eqb_eq; apply E.
-    destruct (S (height l) =? height r).  discriminate.
+    destruct (S (height l) =? height r). discriminate.
     destruct (height l =? S (S (height r))). discriminate.
     destruct (S (S (height l)) =? height r); discriminate.
   - intros H. unfold diff.
     destruct (height l =? height r) eqn: E.
     apply Nat.eqb_eq in E. rewrite H in E. apply Nat.neq_succ_diag_l in E.
     inversion E.
-    apply Nat.eqb_eq in H.  rewrite H. auto.
+    apply Nat.eqb_eq in H. rewrite H. auto.
 Qed.
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+Lemma neq_succ_2_diag_l: forall n : nat,
+  S (S n) <> n.
+Proof.
+  intros n H. induction n as [| n' IHn'].
+  - discriminate.
+  - apply Nat.succ_inj in H. apply IHn' in H. inversion H.
+Qed.
+
+Lemma diff_GoodRight : forall v l r,
+  diff (Node v l r) = GoodRight <-> S (height l) = height r.
+Proof.
+  intros. split.
+  - intros H. unfold diff in H.
+    destruct (height l =? height r). discriminate.
+    destruct (height l =? S (height r)). discriminate.
+    destruct (S (height l) =? height r) eqn: E.
+    apply Nat.eqb_eq; apply E.
+    destruct (height l =? S (S (height r))). discriminate.
+    destruct (S (S (height l)) =? height r); discriminate.
+  - intros H. unfold diff.
+    destruct (height l =? height r) eqn: E1.
+    apply Nat.eqb_eq in E1. rewrite E1 in H.
+    apply Nat.neq_succ_diag_l in H. inversion H.
+    destruct (height l =? S (height r)) eqn: E2.
+    apply Nat.eqb_eq in E2. rewrite E2 in H.
+    apply neq_succ_2_diag_l in H. inversion H.
+    apply Nat.eqb_eq in H. rewrite H. reflexivity.
+Qed.
+
+Lemma neq_succ_3_diag_l: forall n : nat,
+  n <> S (S (S n)).
+Proof.
+  intros n H. induction n as [| n' IHn'].
+  - discriminate.
+  - apply Nat.succ_inj in H. apply IHn' in H. inversion H.
+Qed.
+
+Lemma diff_BadLeft : forall v l r,
+  diff (Node v l r) = BadLeft <-> height l = S (S (height r)).
+Proof.
+  intros. split.
+  - intros H. unfold diff in H.
+    destruct (height l =? height r). discriminate.
+    destruct (height l =? S (height r)). discriminate.
+    destruct (S (height l) =? height r). discriminate.
+    destruct (height l =? S (S (height r))) eqn: E.
+    apply Nat.eqb_eq; apply E.
+    destruct (S (S (height l)) =? height r); discriminate.
+  - intros H. unfold diff.
+    destruct (height l =? height r) eqn: E1.
+    apply Nat.eqb_eq in E1. rewrite E1 in H.
+    symmetry in H. apply neq_succ_2_diag_l in H. inversion H.
+    destruct (height l =? S (height r)) eqn: E2.
+    apply Nat.eqb_eq in E2. rewrite E2 in H.
+    apply Nat.succ_inj in H. symmetry in H.
+    apply Nat.neq_succ_diag_l in H. inversion H.
+    destruct (S (height l) =? height r) eqn: E3.
+    apply Nat.eqb_eq in E3. rewrite <- E3 in H.
+    apply neq_succ_3_diag_l in H. inversion H.
+    apply Nat.eqb_eq in H. rewrite H. reflexivity.
+Qed.
+
+Lemma neq_succ_4_diag_l: forall n : nat,
+  S (S (S (S n))) <> n.
+Proof.
+  intros n H. induction n as [| n' IHn'].
+  - discriminate.
+  - apply Nat.succ_inj in H. apply IHn' in H. inversion H.
+Qed.
+
+Lemma diff_BadRight : forall v l r,
+  diff (Node v l r) = BadRight <-> S (S (height l)) = height r.
+Proof.
+  intros. split.
+  - intros H. unfold diff in H.
+    destruct (height l =? height r). discriminate.
+    destruct (height l =? S (height r)). discriminate.
+    destruct (S (height l) =? height r). discriminate.
+    destruct (height l =? S (S (height r))). discriminate.
+    destruct (S (S (height l)) =? height r)  eqn: E.
+    apply Nat.eqb_eq; apply E. inversion H.
+  - intros H. unfold diff.
+    destruct (height l =? height r) eqn: E1.
+    apply Nat.eqb_eq in E1. rewrite E1 in H.
+    apply neq_succ_2_diag_l in H. inversion H.
+    destruct (height l =? S (height r)) eqn: E2.
+    apply Nat.eqb_eq in E2. rewrite E2 in H.
+    symmetry in H. apply neq_succ_3_diag_l in H. inversion H.
+    destruct (S (height l) =? height r) eqn: E3.
+    apply Nat.eqb_eq in E3. rewrite <- E3 in H.
+    apply Nat.succ_inj in H. apply Nat.neq_succ_diag_l in H. inversion H.
+    destruct (height l =? S (S (height r))) eqn: E4.
+    apply Nat.eqb_eq in E4. rewrite E4 in H.
+    apply neq_succ_4_diag_l in H. inversion H.
+    apply Nat.eqb_eq in H. rewrite H. reflexivity.
+Qed.
