@@ -111,45 +111,33 @@ Proof.
 Admitted.
 
 Inductive Diff : Type :=
-  | Neutral
-  | GoodLeft
-  | GoodRight
-  | BadLeft
-  | BadRight
+  | Zero
+  | One
+  | MinusOne
+  | Two
+  | MinusTwo
   | Impossible.
 
 Definition diff (t : tree) : Diff :=
   match t with
-  | Nil => Neutral
+  | Nil => Zero
   | Node _ l r => let hl := height l in
                   let hr := height r in
                     if hl =? hr
-                    then Neutral
+                    then Zero
                     else if hl =? (S hr)
-                    then GoodLeft
+                    then One
                     else if (S hl) =? hr
-                    then GoodRight
+                    then MinusOne
                     else if hl =? (S (S hr))
-                    then BadLeft
+                    then Two
                     else if (S (S hl)) =? hr
-                    then BadRight
+                    then MinusTwo
                     else Impossible
   end.
 
-
-Definition eqb_diff (d1 d2 : Diff) : bool :=
-  match d1, d2 with
-  | Neutral, Neutral       => true
-  | GoodLeft, GoodLeft     => true
-  | GoodRight, GoodRight   => true
-  | BadLeft, BadLeft       => true
-  | BadRight, BadRight     => true
-  | Impossible, Impossible => true
-  | _, _                   => false
-  end.
-
-Lemma diff_Neutral : forall v l r,
-  diff (Node v l r) = Neutral <-> height l = height r.
+Lemma diff_Zero : forall v l r,
+  diff (Node v l r) = Zero <-> height l = height r.
 Proof.
   intros. split.
   - intros H. unfold diff in H.
@@ -162,8 +150,8 @@ Proof.
   - intros H. apply Nat.eqb_eq in H. unfold diff. rewrite H. auto.
 Qed.
 
-Lemma diff_GoodLeft : forall v l r,
-  diff (Node v l r) = GoodLeft <-> height l = S (height r).
+Lemma diff_One : forall v l r,
+  diff (Node v l r) = One <-> height l = S (height r).
 Proof.
   intros. split.
   - intros H. unfold diff in H.
@@ -188,8 +176,8 @@ Proof.
   - apply Nat.succ_inj in H. apply IHn' in H. inversion H.
 Qed.
 
-Lemma diff_GoodRight : forall v l r,
-  diff (Node v l r) = GoodRight <-> S (height l) = height r.
+Lemma diff_MinusOne : forall v l r,
+  diff (Node v l r) = MinusOne <-> S (height l) = height r.
 Proof.
   intros. split.
   - intros H. unfold diff in H.
@@ -217,8 +205,8 @@ Proof.
   - apply Nat.succ_inj in H. apply IHn' in H. inversion H.
 Qed.
 
-Lemma diff_BadLeft : forall v l r,
-  diff (Node v l r) = BadLeft <-> height l = S (S (height r)).
+Lemma diff_Two : forall v l r,
+  diff (Node v l r) = Two <-> height l = S (S (height r)).
 Proof.
   intros. split.
   - intros H. unfold diff in H.
@@ -250,8 +238,8 @@ Proof.
   - apply Nat.succ_inj in H. apply IHn' in H. inversion H.
 Qed.
 
-Lemma diff_BadRight : forall v l r,
-  diff (Node v l r) = BadRight <-> S (S (height l)) = height r.
+Lemma diff_MinusTwo : forall v l r,
+  diff (Node v l r) = MinusTwo <-> S (S (height l)) = height r.
 Proof.
   intros. split.
   - intros H. unfold diff in H.
@@ -276,3 +264,81 @@ Proof.
     apply neq_succ_4_diag_l in H. inversion H.
     apply Nat.eqb_eq in H. rewrite H. reflexivity.
 Qed.
+
+(* ---------- insert AVL ----------*)
+Definition rebalance_right (t : tree) : tree :=
+  match t with
+  | Nil => Nil
+  | Node v l r => match diff l with
+                  | MinusOne => right_rotate (Node v (left_rotate l) r)
+                  | _ => right_rotate (Node v l r)
+                  end
+  end.
+
+Definition rebalance_left (t : tree) : tree :=
+  match t with
+  | Nil => Nil
+  | Node v l r => match diff r with
+                  | One => left_rotate (Node v l (right_rotate r))
+                  | _ => left_rotate (Node v l r)
+                  end
+  end.
+
+Definition rebalance (t : tree) : tree :=
+  match diff t with
+  | Two => rebalance_right t
+  | MinusTwo => rebalance_left t
+  | _ => t
+  end.
+
+Fixpoint insertAVL (t : tree) (v: nat): tree :=
+  match t with
+  | Nil => Node v Nil Nil
+  | Node v' l r => if v <? v'
+                   then rebalance (Node v' (insertAVL l v) r)
+                   else if v' <? v
+                        then rebalance (Node v' l (insertAVL r v))
+                        else t
+  end.
+
+Lemma max_Sn_n: forall (n: nat),
+  max (S n) n = S n.
+Proof.
+  intros n. apply max_l. auto.
+Qed.
+
+Theorem insertAVL_AVL: forall (t : tree) (v : nat),
+  AVL t -> AVL (insertAVL t v).
+Proof.
+  intros t v H. induction H.
+    * simpl.  apply AVL_Node_Eq; try apply AVL_Empty.
+      + simpl. reflexivity.
+    * simpl. destruct (v <? v0).
+      + unfold rebalance. destruct (diff (Node v0 (insertAVL l v) r)) eqn:EQ.
+        -- apply diff_Zero in EQ. apply AVL_Node_Eq; auto.
+        -- apply diff_One in EQ. apply AVL_Node_L; auto.
+        -- apply diff_MinusOne in EQ. apply AVL_Node_R; auto.
+        -- apply diff_Two in EQ. unfold rebalance_right. inversion IHAVL1.
+           ++ rewrite <- H3 in EQ. discriminate.
+           ++ Admitted.
+           (*
+           destruct (diff (insertAVL l v)) eqn:EQ2.
+           ++ simpl. destruct (insertAVL l v).
+              ** discriminate.
+              ** simpl in EQ. apply diff_Zero in EQ2. rewrite EQ2 in EQ.
+                 rewrite Nat.max_id in EQ. injection EQ as EQ. apply AVL_Node_R.
+                 --- inversion IHAVL1; auto.
+                 --- apply AVL_Node_L; auto. inversion IHAVL1; auto.
+                 --- simpl. rewrite EQ. f_equal. rewrite EQ2. rewrite EQ.
+                     apply max_Sn_n.
+           ++ simpl. destruct (insertAVL l v).
+              ** discriminate.
+              ** simpl in EQ. apply diff_One in EQ2. rewrite EQ2 in EQ.
+                 rewrite max_Sn_n in EQ. injection EQ as EQ. apply AVL_Node_L.
+                 --- inversion IHAVL1; auto. *)
+
+Theorem insertAVL_BST: forall (t: tree) (v : nat),
+  BST t -> BST (insertAVL t v).
+Proof.
+  Admitted.
+
