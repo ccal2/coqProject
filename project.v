@@ -337,8 +337,25 @@ Proof.
                  rewrite max_Sn_n in EQ. injection EQ as EQ. apply AVL_Node_L.
                  --- inversion IHAVL1; auto. *)
 
-Theorem insertAVL_BST: forall (t: tree) (v : nat),
+Theorem insertAVL_BST: forall (t : tree) (v : nat),
   BST t -> BST (insertAVL t v).
 Proof.
-  Admitted.
+Admitted.
 
+Lemma insert_not_Nil : forall (t : tree) (v : nat),
+  insert t v <> Nil.
+Proof.
+  intros t v. induction t as [| v' l IHl r IHr]; simpl;
+  (try destruct (v <? v'));
+  (try destruct (v' <? v));
+  intros H; discriminate H.
+(* resolução original (passo a passo):
+  intros t v. induction t as [| v' l IHl r IHr]; simpl.
+  - intros H. discriminate H.
+  - destruct (v <? v').
+    + intros H. discriminate H.
+    + destruct (v' <? v).
+      * intros H. discriminate H.
+      * intros H. discriminate H.
+*)
+Qed.
