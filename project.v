@@ -114,17 +114,39 @@ Definition left_rotate (t: tree) : tree :=
   | _ => t
   end.
 
+Lemma ForallT_lt_trans : forall (n m : nat) (t : tree),
+  n < m -> ForallT t (fun x : nat => x < n) -> ForallT t (fun x : nat => x < m).
+Proof.
+  intros n m t H1 H2. induction t as [| v l IHl r IHr];
+  simpl; auto.
+  repeat split.
+  - simpl in H2. destruct H2 as [H2 H3].
+    apply Nat.lt_trans with (m := n); auto.
+  - apply IHl. simpl in H2. destruct H2 as [H2 [H3 H4]].
+    auto.
+  - apply IHr. simpl in H2. destruct H2 as [H2 [H3 H4]].
+    auto.
+Qed.
+
 Theorem left_rotate_BST: forall (v: nat) (t : tree),
   BST t -> BST (left_rotate t).
 Proof.
-  intros v t. induction t as [| v' l' IHl' r' IHr'].
-  - simpl. intros H. apply H.
-  - intros H. destruct l' as [| v2' l2' r2'];
-    destruct r' as [| v1' l1' r1']; simpl.
-    + apply H.
-    + apply BST_Node.
-      * admit.
-Admitted.
+  intros v t H. inversion H; unfold left_rotate.
+  - constructor.
+  - destruct r as [| v' l' r'].
+    + rewrite H4. apply H.
+    + constructor.
+      * inversion H1. constructor; auto.
+        simpl in H3. destruct H3 as [H3 [H12 H13]].
+        auto.
+      * inversion H1; auto.
+      * simpl in H3. destruct H3 as [H3 [H12 H13]].
+        simpl. repeat split.
+        -- auto.
+        -- apply ForallT_lt_trans with (n := v0); auto.
+        -- inversion H1. auto.
+      * inversion H1. auto.
+Qed.
 
 Definition right_rotate (t: tree) : tree :=
   match t with
