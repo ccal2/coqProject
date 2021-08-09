@@ -40,10 +40,37 @@ Inductive BST : tree -> Prop :=
     ForallT r (fun x => x > v) ->
     BST (Node v l r).
 
+Lemma ForallT_insert : forall (t : tree) (P : nat -> Prop) (v : nat),
+  P v -> ForallT t P -> ForallT (insert t v) P.
+Proof.
+ intros t P v H1 H2. induction t as [| v' l IHr r IHl]; simpl.
+ - repeat split. apply H1.
+ - destruct (v <? v').
+  + simpl. simpl in H2. destruct H2 as [H2 [H3 H4]]. repeat split.
+    * apply H2.
+    * apply IHr. apply H3.
+    * apply H4.
+  + destruct (v' <? v).
+    * simpl. simpl in H2.
+      destruct H2 as [H2 [H3 H4]]. repeat split; auto.
+    * auto.
+Qed.
+
 Theorem insertBST : forall (v : nat) (t : tree),
   BST t -> BST (insert t v).
 Proof.
-Admitted.
+  intros v t H. induction H as [| v' l r H1 IHl H2 IHr H3 H4].
+  - simpl. constructor; try constructor.
+  - simpl. destruct (v<? v') eqn: E1.
+    + constructor; auto. apply ForallT_insert.
+      * apply Nat.ltb_lt. apply E1.
+      * auto.
+    + destruct (v'<? v) eqn: E2.
+      * constructor; auto. apply ForallT_insert.
+        -- unfold gt. apply Nat.ltb_lt. apply E2.
+        -- auto.
+      * constructor; auto.
+Qed.
 
 Fixpoint InT (t : tree) (v : nat) : Prop :=
   match t with
