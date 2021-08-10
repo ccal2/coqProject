@@ -154,10 +154,39 @@ Definition right_rotate (t: tree) : tree :=
   | _ => t
   end.
 
+Lemma ForallT_gt_trans : forall (n m : nat) (t : tree),
+  n > m -> ForallT t (fun x : nat => x > n) -> ForallT t (fun x : nat => x > m).
+Proof.
+  intros n m t H1 H2. induction t as [| v l IHl r IHr];
+  simpl; auto.
+  repeat split.
+  - simpl in H2. destruct H2 as [H2 H3].
+    apply Nat.lt_trans with (m := n); auto.
+  - apply IHl. simpl in H2. destruct H2 as [H2 [H3 H4]].
+    auto.
+  - apply IHr. simpl in H2. destruct H2 as [H2 [H3 H4]].
+    auto.
+Qed.
+
 Theorem right_rotate_BST: forall (v: nat) (t : tree),
   BST t -> BST (right_rotate t).
 Proof.
-Admitted.
+  intros v t H. inversion H; unfold right_rotate.
+  - constructor.
+  - destruct l as [| v' l' r'].
+    + rewrite H4. auto.
+    + constructor.
+      * inversion H0. auto.
+      * constructor; auto.
+        -- inversion H0. auto.
+        -- simpl in H2. destruct H2 as [H2 [H5 H6]]. auto.
+      * inversion H0. auto.
+      * simpl. repeat split. 
+        -- simpl in H2. destruct H2 as [H2 [H5 H6]]. auto.
+        -- inversion H0. auto.
+        -- simpl in H2. destruct H2 as [H2 [H5 H6]].
+           apply ForallT_gt_trans with (n := v0); auto.
+Qed.
 
 Inductive Diff : Type :=
   | Zero
