@@ -90,23 +90,27 @@ Fixpoint height (t : tree) : nat :=
   | Node v l r => S (max (height l) (height r))
   end.
 
-Inductive AVL :tree -> Prop :=
-  | AVL_Empty: AVL Nil
-  | AVL_Node_Eq (v : nat) (l r : tree): 
-    AVL l ->
-    AVL r ->
+(* BT = Balanced Tree *)
+Inductive BT : tree -> Prop :=
+  | BT_Empty: BT Nil
+  | BT_Node_Eq (v : nat) (l r : tree): 
+    BT l ->
+    BT r ->
     height r = height l ->
-    AVL (Node v l r)
-  | AVL_Node_R (v : nat) (l r : tree): 
-    AVL l ->
-    AVL r ->
+    BT (Node v l r)
+  | BT_Node_R (v : nat) (l r : tree): 
+    BT l ->
+    BT r ->
     height r = S (height l) ->
-    AVL (Node v l r)
-  | AVL_Node_L (v : nat) (l r : tree): 
-    AVL l ->
-    AVL r ->
+    BT (Node v l r)
+  | BT_Node_L (v : nat) (l r : tree): 
+    BT l ->
+    BT r ->
     height l = S (height r) ->
-    AVL (Node v l r).
+    BT (Node v l r).
+
+Definition AVL (t : tree) : Prop :=
+  BST t /\ BT t.
 
 Definition left_rotate (t: tree) : tree :=
   match t with
@@ -385,20 +389,33 @@ Proof.
   intros n. apply max_l. auto.
 Qed.
 
-Theorem insertAVL_AVL: forall (t : tree) (v : nat),
-  AVL t -> AVL (insertAVL t v).
+(*Theorem inserbalanceAVL: forall (l r: tree) (v v0 :nat),
+  height l = height r -> diff (Node v0 (insertAVL l v) r)  *)
+Lemma insertAVL_height: forall (t : tree) (v: nat),
+  height (insertAVL t v) = S (height t) \/ height (insertAVL t v) = height t.
+Proof.
+Admitted.
+
+Theorem insertAVL_BT: forall (t : tree) (v : nat),
+  BT t -> BT (insertAVL t v).
 Proof.
   intros t v H. induction H.
-    * simpl.  apply AVL_Node_Eq; try apply AVL_Empty.
-      + simpl. reflexivity.
-    * simpl. destruct (v <? v0).
-      + unfold rebalance. destruct (diff (Node v0 (insertAVL l v) r)) eqn:EQ.
-        -- apply diff_Zero in EQ. apply AVL_Node_Eq; auto.
-        -- apply diff_One in EQ. apply AVL_Node_L; auto.
-        -- apply diff_MinusOne in EQ. apply AVL_Node_R; auto.
-        -- apply diff_Two in EQ. unfold rebalance_right. inversion IHAVL1.
+  - simpl.  apply BT_Node_Eq; try apply BT_Empty. reflexivity.
+  - simpl. destruct (v <? v0).
+    + unfold rebalance. destruct (diff (Node v0 (insertAVL l v) r)) eqn:EQ.
+        -- apply diff_Zero in EQ. apply BT_Node_Eq; auto.
+        -- apply diff_One in EQ. apply BT_Node_L; auto.
+        -- apply diff_MinusOne in EQ. apply BT_Node_R; auto.
+        -- admit. 
+        -- admit. 
+        -- pose proof (insertAVL_height l v). destruct H2.
+           ++ rewrite <- H1 in H2. apply diff_One with (v := v0) in H2.
+              rewrite H2 in EQ. discriminate.
+           ++ rewrite <- H1 in H2. apply diff_Zero with (v := v0) in H2.
+              rewrite H2 in EQ. discriminate.
+              (* apply diff_Two in EQ. unfold rebalance_right. inversion IHBT1.
            ++ rewrite <- H3 in EQ. discriminate.
-           ++ Admitted.
+           ++  *)
            (*
            destruct (diff (insertAVL l v)) eqn:EQ2.
            ++ simpl. destruct (insertAVL l v).
@@ -414,11 +431,20 @@ Proof.
               ** simpl in EQ. apply diff_One in EQ2. rewrite EQ2 in EQ.
                  rewrite max_Sn_n in EQ. injection EQ as EQ. apply AVL_Node_L.
                  --- inversion IHAVL1; auto. *)
+Admitted.
 
 Theorem insertAVL_BST: forall (t : tree) (v : nat),
   BST t -> BST (insertAVL t v).
 Proof.
 Admitted.
+
+Theorem insertAVL_AVL:  forall (t : tree) (v : nat),
+  AVL t -> AVL (insertAVL t v).
+Proof.
+  unfold AVL. intros. destruct H. split.
+  - apply insertAVL_BST. apply H.
+  - apply insertAVL_BT. apply H0.
+Qed.
 
 Lemma insert_not_Nil : forall (t : tree) (v : nat),
   insert t v <> Nil.
