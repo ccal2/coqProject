@@ -389,10 +389,271 @@ Proof.
   intros n. apply max_l. auto.
 Qed.
 
+Lemma max_n_Sn: forall (n: nat),
+  max n (S n) = S n.
+Proof.
+  intros n. rewrite Nat.max_comm. apply max_Sn_n.
+Qed.
+
+Lemma max_SSn_n: forall (n: nat),
+  max (S (S n)) n = S ( S n).
+Proof.
+Admitted.
+
 (*Theorem inserbalanceAVL: forall (l r: tree) (v v0 :nat),
   height l = height r -> diff (Node v0 (insertAVL l v) r)  *)
 Lemma insertAVL_height: forall (t : tree) (v: nat),
+  BT t ->
   height (insertAVL t v) = S (height t) \/ height (insertAVL t v) = height t.
+Proof.
+  intros. induction H as 
+    [|
+     v' l r BTl IHl BTr IHr EQlr |
+     v' l r BTl IHl BTr IHr EQlr |
+     v' l r BTl IHl BTr IHr EQlr ].
+  - simpl. left. reflexivity.
+  - simpl. destruct (v <? v').
+    + unfold rebalance. destruct (diff (Node v' (insertAVL l v) r)) eqn:EQ;
+      try (simpl; destruct IHl as [IHl | IHl]; [
+        rewrite IHl; destruct (S (height l) <=? height r) eqn: EQ2; [
+           apply Nat.leb_le in EQ2; right; f_equal; rewrite max_r; auto;
+              symmetry; apply max_r; rewrite Nat.le_succ_l in EQ2;
+              apply Nat.lt_le_incl in EQ2; apply EQ2 |
+           rewrite Nat.leb_gt in EQ2; left; f_equal; rewrite max_l; [
+              f_equal; unfold lt in EQ2; apply le_S_n in EQ2;
+                 symmetry; apply max_l; apply EQ2 |
+             apply Nat.lt_le_incl; apply EQ2 ]]|
+        right; f_equal; rewrite IHl; reflexivity ]).
+     * unfold rebalance_right. destruct (diff (insertAVL l v)) eqn:EQ2;
+       try (unfold right_rotate; destruct (insertAVL l v); [
+            simpl; apply diff_Two in EQ; simpl in EQ; discriminate |
+            simpl; apply diff_Two in EQ; simpl in EQ; injection EQ as EQ;
+              destruct IHl; [
+              simpl in H; injection H as H; rewrite <- H; rewrite EQ;
+                 rewrite max_Sn_n;
+                 pose proof (Nat.max_spec (height t2) (height t1)) as H1;
+                 destruct H1 as [ [H1 H2] | [H1 H2]]; [
+                  rewrite Nat.max_comm in H2; rewrite H2 in EQ; rewrite EQ;
+                     simpl; rewrite Nat.max_assoc; right; f_equal; f_equal;
+                     apply max_r; rewrite max_l; auto; rewrite EQ in H1; unfold lt in H1;
+                     apply le_S_n; auto |
+                  rewrite Nat.max_comm in H2; rewrite H2 in EQ; rewrite EQ;
+                     rewrite max_Sn_n; left; f_equal; apply max_r; rewrite EQ in H1; auto ] |
+              simpl in H; rewrite EQ in H; rewrite EQlr in H; apply neq_succ_2_diag_l in H;
+                 inversion H ]]).
+        unfold right_rotate. destruct (insertAVL l v) eqn:EQ3.
+        -- simpl. rewrite EQlr. right. f_equal. rewrite Nat.max_id. reflexivity.
+        -- unfold left_rotate. destruct t2 eqn:EQ4.
+           ++ simpl. apply diff_MinusOne in EQ2. discriminate.
+           ++ simpl. apply diff_MinusOne in EQ2. simpl in EQ2. injection EQ2 as EQ2.
+              apply diff_Two in EQ. simpl in EQ. injection EQ as EQ. rewrite EQ2 in EQ.
+              rewrite Nat.max_comm in EQ. rewrite max_Sn_n in EQ. injection EQ as EQ.
+              assert (H: max (height t1) (height t3) = max (height t3) (height t4)).
+              { rewrite Nat.max_comm. rewrite EQ2. rewrite Nat.max_assoc.
+                rewrite Nat.max_id. reflexivity. }
+              rewrite H. clear H.
+              assert (H: max (height t4) (height r) = max (height t3) (height t4)).
+              { rewrite Nat.max_comm. rewrite <- EQ. rewrite <- Nat.max_assoc.
+                rewrite Nat.max_id. reflexivity. }
+              rewrite H. rewrite Nat.max_id. rewrite EQ. rewrite EQlr.
+              left. rewrite Nat.max_id. reflexivity.
+      * apply diff_MinusTwo in EQ. destruct IHl.
+        -- rewrite <- EQlr in H. rewrite H in EQ. symmetry in EQ.
+           apply neq_succ_3_diag_l in EQ. inversion EQ.
+        -- rewrite <- EQlr in H. rewrite H in EQ.
+           apply neq_succ_2_diag_l in EQ. inversion EQ.
+    +  destruct (v' <? v).
+       * unfold rebalance. destruct (diff (Node v' l (insertAVL r v))) eqn:EQ;
+         try ( simpl; destruct IHr as [IHr | IHr]; [
+            rewrite IHr; rewrite EQlr; left; rewrite Nat.max_id; rewrite Nat.max_comm;
+            rewrite max_Sn_n; reflexivity |
+            rewrite IHr; rewrite EQlr; right; reflexivity ]).
+         -- apply diff_Two in EQ.  destruct IHr. 
+            ++ rewrite EQlr in H. rewrite H in EQ.
+               apply neq_succ_3_diag_l in EQ. inversion EQ.
+            ++ rewrite EQlr in H. rewrite H in EQ. symmetry in EQ.
+               apply neq_succ_2_diag_l in EQ. inversion EQ. 
+         -- apply diff_MinusTwo in EQ. destruct IHr.
+            ++ rewrite EQlr in H. rewrite H in EQ. apply Nat.neq_succ_diag_l in EQ.
+               inversion EQ.
+            ++ rewrite EQlr in H. rewrite H in EQ. apply neq_succ_2_diag_l in EQ.
+               inversion EQ.
+       * simpl. right. reflexivity.
+  - simpl. destruct (v <? v').
+    + unfold rebalance. destruct (diff (Node v' (insertAVL l v) r)) eqn:EQ;
+      try (simpl; destruct IHl as [IHl | IHl]; [
+        rewrite IHl; destruct (S (height l) <=? height r) eqn: EQ2; [
+           apply Nat.leb_le in EQ2; right; f_equal; rewrite max_r; auto;
+              symmetry; apply max_r; rewrite Nat.le_succ_l in EQ2;
+              apply Nat.lt_le_incl in EQ2; apply EQ2 |
+           rewrite Nat.leb_gt in EQ2; left; f_equal; rewrite max_l; [
+              f_equal; unfold lt in EQ2; apply le_S_n in EQ2;
+                 symmetry; apply max_l; apply EQ2 |
+             apply Nat.lt_le_incl; apply EQ2 ]]|
+        right; f_equal; rewrite IHl; reflexivity ]).
+     * unfold rebalance_right. destruct (diff (insertAVL l v)) eqn:EQ2;
+        try (unfold right_rotate; destruct (insertAVL l v); [
+            simpl; apply diff_Two in EQ; simpl in EQ; discriminate |
+            simpl; apply diff_Two in EQ; simpl in EQ; injection EQ as EQ;
+              destruct IHl; [
+              simpl in H; injection H as H; rewrite <- H; rewrite EQ;
+                 rewrite max_Sn_n;
+                 pose proof (Nat.max_spec (height t2) (height t1)) as H1;
+                 destruct H1 as [ [H1 H2] | [H1 H2]]; [
+                  rewrite Nat.max_comm in H2; rewrite H2 in EQ; rewrite EQ;
+                     simpl; rewrite Nat.max_assoc; right; f_equal; f_equal;
+                     apply max_r; rewrite max_l; auto; rewrite EQ in H1; unfold lt in H1;
+                     apply le_S_n; auto |
+                  rewrite Nat.max_comm in H2; rewrite H2 in EQ; rewrite EQ;
+                     rewrite max_Sn_n; left; f_equal; apply max_r; rewrite EQ in H1; auto ] |
+            simpl in H; rewrite EQ in H; rewrite EQlr in H; symmetry in H; apply neq_succ_3_diag_l in H;
+                 inversion H]]).
+        unfold right_rotate. destruct (insertAVL l v) eqn:EQ3.
+        -- simpl. rewrite EQlr. right. f_equal. rewrite Nat.max_comm. rewrite max_Sn_n.
+           reflexivity.
+        -- unfold left_rotate. destruct t2 eqn:EQ4.
+           ++ simpl. apply diff_MinusOne in EQ2. discriminate.
+           ++ simpl. apply diff_MinusOne in EQ2. simpl in EQ2. injection EQ2 as EQ2.
+              apply diff_Two in EQ. simpl in EQ. injection EQ as EQ. rewrite EQ2 in EQ.
+              rewrite Nat.max_comm in EQ. rewrite max_Sn_n in EQ. injection EQ as EQ.
+              assert (H: max (height t1) (height t3) = max (height t3) (height t4)).
+              { rewrite Nat.max_comm. rewrite EQ2. rewrite Nat.max_assoc.
+                rewrite Nat.max_id. reflexivity. }
+              rewrite H. clear H.
+              assert (H: max (height t4) (height r) = max (height t3) (height t4)).
+              { rewrite Nat.max_comm. rewrite <- EQ. rewrite <- Nat.max_assoc.
+                rewrite Nat.max_id. reflexivity. }
+              rewrite H. rewrite Nat.max_id. rewrite EQ. rewrite EQlr.
+              left. rewrite Nat.max_comm. rewrite max_Sn_n. reflexivity.
+      * apply diff_MinusTwo in EQ. destruct IHl.
+        -- rewrite <- EQlr in H. rewrite H in EQ.
+           apply neq_succ_2_diag_l in EQ. inversion EQ.
+        -- rewrite EQlr in EQ. rewrite H in EQ.
+           apply Nat.neq_succ_diag_l in EQ. inversion EQ.
+    +  destruct (v' <? v).
+       * unfold rebalance. destruct (diff (Node v' l (insertAVL r v))) eqn:EQ;
+         try (simpl; destruct IHr as [IHr | IHr]; [
+             rewrite IHr; rewrite EQlr; left; rewrite Nat.max_comm;
+             rewrite max_SSn_n; rewrite Nat.max_comm;
+            rewrite max_Sn_n; reflexivity |
+            rewrite IHr; rewrite EQlr; right; reflexivity ]).
+         -- apply diff_Two in EQ.  destruct IHr. 
+            ++ rewrite EQlr in H. rewrite H in EQ. symmetry in EQ.
+               apply neq_succ_4_diag_l in EQ. inversion EQ.
+            ++ rewrite EQlr in H. rewrite H in EQ.
+               apply neq_succ_3_diag_l in EQ. inversion EQ. 
+         -- apply diff_MinusTwo in EQ. destruct IHr.
+            ++ unfold rebalance_left. Arguments max: simpl never.
+               destruct ( diff (insertAVL r v)) eqn:EQ2;
+               try (unfold left_rotate; destruct (insertAVL r v); [ discriminate |
+                    simpl in EQ; injection EQ as EQ;
+                      simpl in H; injection H as H; simpl;
+                      pose proof (Nat.max_spec (height t1) (height t2)) as H1;
+                 destruct H1 as [ [H1 H2] | [H1 H2]]; [
+                   rewrite H2 in EQ; rewrite <- EQ;
+                     rewrite <- EQ in H1; unfold lt in H1; apply le_S_n in H1; right;
+                     rewrite EQlr; rewrite max_n_Sn; f_equal; apply max_r; rewrite max_l; auto |
+                   rewrite H2 in EQ; rewrite <- EQ;
+                     rewrite max_n_Sn; left; f_equal; f_equal; rewrite EQlr; rewrite max_n_Sn;
+                     apply max_l; rewrite <- EQ in H1; auto ]]).
+                unfold left_rotate. destruct (insertAVL r v) eqn: EQ3.
+                ** inversion EQ2.
+                ** apply diff_One in EQ2. unfold right_rotate. destruct t1.
+                   --- discriminate.
+                   --- simpl in EQ2. simpl in EQ. rewrite EQ2 in EQ. rewrite max_Sn_n in EQ.
+                       injection EQ as EQ. simpl in H. injection H as H. rewrite EQ2 in H.
+                       rewrite max_Sn_n in H. injection EQ2 as EQ2.
+                       Arguments max : simpl nomatch. simpl.
+                       assert (H': max (height l) (height t1_1) = height l).
+                       { rewrite  EQ. rewrite <- Nat.max_comm in EQ2.  rewrite <- EQ2.
+                         rewrite <- Nat.max_assoc. rewrite Nat.max_id. reflexivity. }
+                       rewrite H'. clear H'.
+                       assert (H': max (height t1_2) (height t2) = height l).
+                       { rewrite Nat.max_comm. rewrite <- EQ2. rewrite <- Nat.max_assoc.
+                         rewrite Nat.max_id. rewrite <- EQ in EQ2. apply EQ2. }
+                       rewrite H'. rewrite EQlr. right. rewrite Nat.max_id. rewrite max_n_Sn.
+                       reflexivity.
+            ++ rewrite EQlr in H. rewrite H in EQ.
+               apply Nat.neq_succ_diag_l in EQ. inversion EQ.
+       * simpl. right. reflexivity.
+  - simpl. destruct (v <? v').
+    + unfold rebalance. destruct (diff (Node v' (insertAVL l v) r)) eqn:EQ;
+      try (simpl; destruct IHl as [IHl | IHl]; [
+        rewrite IHl; destruct (S (height l) <=? height r) eqn: EQ2; [
+           apply Nat.leb_le in EQ2; right; f_equal; rewrite max_r; auto;
+              symmetry; apply max_r; rewrite Nat.le_succ_l in EQ2;
+              apply Nat.lt_le_incl in EQ2; apply EQ2 |
+           rewrite Nat.leb_gt in EQ2; left; f_equal; rewrite max_l; [
+              f_equal; unfold lt in EQ2; apply le_S_n in EQ2;
+                 symmetry; apply max_l; apply EQ2 |
+             apply Nat.lt_le_incl; apply EQ2 ]]|
+        right; f_equal; rewrite IHl; reflexivity ]).
+     * unfold rebalance_right. destruct (diff (insertAVL l v)) eqn:EQ2;
+        try (unfold right_rotate; destruct (insertAVL l v); [
+            simpl; apply diff_Two in EQ; simpl in EQ; discriminate |
+            simpl; apply diff_Two in EQ; simpl in EQ; injection EQ as EQ;
+              destruct IHl; [
+              simpl in H; injection H as H; rewrite <- H; rewrite EQ;
+                 rewrite max_Sn_n;
+                 pose proof (Nat.max_spec (height t2) (height t1)) as H1;
+                 destruct H1 as [ [H1 H2] | [H1 H2]]; [
+                  rewrite Nat.max_comm in H2; rewrite H2 in EQ; rewrite EQ;
+                     simpl; rewrite Nat.max_assoc; right; f_equal; f_equal;
+                     apply max_r; rewrite max_l; auto; rewrite EQ in H1; unfold lt in H1;
+                     apply le_S_n; auto |
+                  rewrite Nat.max_comm in H2; rewrite H2 in EQ; rewrite EQ;
+                     rewrite max_Sn_n; left; f_equal; apply max_r; rewrite EQ in H1; auto ] |
+            simpl in H; rewrite EQ in H; rewrite EQlr in H; apply Nat.neq_succ_diag_l in H;
+                 inversion H]]).
+        unfold right_rotate. destruct (insertAVL l v) eqn:EQ3.
+        -- simpl. rewrite EQlr. inversion EQ2.
+        -- unfold left_rotate. destruct t2 eqn:EQ4.
+           ++ simpl. apply diff_MinusOne in EQ2. discriminate.
+           ++ simpl. apply diff_MinusOne in EQ2. simpl in EQ2. injection EQ2 as EQ2.
+              apply diff_Two in EQ. simpl in EQ. injection EQ as EQ. rewrite EQ2 in EQ.
+              rewrite Nat.max_comm in EQ. rewrite max_Sn_n in EQ. injection EQ as EQ.
+              assert (H: max (height t1) (height t3) = max (height t3) (height t4)).
+              { rewrite Nat.max_comm. rewrite EQ2. rewrite Nat.max_assoc.
+                rewrite Nat.max_id. reflexivity. }
+              rewrite H. clear H.
+              assert (H: max (height t4) (height r) = max (height t3) (height t4)).
+              { rewrite Nat.max_comm. rewrite <- EQ. rewrite <- Nat.max_assoc.
+                rewrite Nat.max_id. reflexivity. }
+              rewrite H. rewrite Nat.max_id. rewrite EQ. rewrite EQlr.
+              right. rewrite max_Sn_n. reflexivity.
+      * apply diff_MinusTwo in EQ. destruct IHl.
+        -- rewrite EQlr in H. rewrite H in EQ.
+           apply neq_succ_4_diag_l in EQ. inversion EQ.
+        -- rewrite EQlr in H. rewrite H in EQ. symmetry in EQ.
+           apply neq_succ_3_diag_l in EQ. inversion EQ.
+    +  destruct (v' <? v).
+       * unfold rebalance. destruct (diff (Node v' l (insertAVL r v))) eqn:EQ;
+         try (simpl; destruct IHr as [IHr | IHr]; [
+             rewrite IHr; rewrite EQlr; right; rewrite Nat.max_id;
+            rewrite max_Sn_n; reflexivity |
+             rewrite IHr; rewrite EQlr; right; reflexivity]).
+         -- apply diff_Two in EQ.  destruct IHr. 
+            ++ rewrite <- EQlr in H. rewrite H in EQ. symmetry in EQ.
+               apply neq_succ_2_diag_l in EQ. inversion EQ.
+            ++ rewrite EQlr in EQ. rewrite H in EQ. symmetry in EQ.
+               apply Nat.neq_succ_diag_l in EQ. inversion EQ. 
+         -- apply diff_MinusTwo in EQ. destruct IHr.
+            ++ rewrite <- EQlr in H. rewrite H in EQ. apply neq_succ_2_diag_l in EQ.
+               inversion EQ.
+            ++ rewrite EQlr in EQ. rewrite H in EQ. symmetry in EQ.
+               apply neq_succ_3_diag_l in EQ. inversion EQ.
+       * simpl. right. reflexivity.
+Qed.
+
+Lemma rebalance_right_BT: forall (l r : tree) (v : nat),
+  BT l -> BT r -> height l = S (S (height r)) ->
+  BT (rebalance_right (Node v l r)).
+Proof.
+Admitted.
+
+Lemma rebalance_left_BT: forall (l r : tree) (v : nat),
+  BT l -> BT r -> S (S (height l)) = height r ->
+  BT (rebalance_left (Node v l r)).
 Proof.
 Admitted.
 
@@ -406,32 +667,77 @@ Proof.
         -- apply diff_Zero in EQ. apply BT_Node_Eq; auto.
         -- apply diff_One in EQ. apply BT_Node_L; auto.
         -- apply diff_MinusOne in EQ. apply BT_Node_R; auto.
-        -- admit. 
-        -- admit. 
-        -- pose proof (insertAVL_height l v). destruct H2.
-           ++ rewrite <- H1 in H2. apply diff_One with (v := v0) in H2.
-              rewrite H2 in EQ. discriminate.
-           ++ rewrite <- H1 in H2. apply diff_Zero with (v := v0) in H2.
-              rewrite H2 in EQ. discriminate.
-              (* apply diff_Two in EQ. unfold rebalance_right. inversion IHBT1.
-           ++ rewrite <- H3 in EQ. discriminate.
-           ++  *)
-           (*
-           destruct (diff (insertAVL l v)) eqn:EQ2.
-           ++ simpl. destruct (insertAVL l v).
-              ** discriminate.
-              ** simpl in EQ. apply diff_Zero in EQ2. rewrite EQ2 in EQ.
-                 rewrite Nat.max_id in EQ. injection EQ as EQ. apply AVL_Node_R.
-                 --- inversion IHAVL1; auto.
-                 --- apply AVL_Node_L; auto. inversion IHAVL1; auto.
-                 --- simpl. rewrite EQ. f_equal. rewrite EQ2. rewrite EQ.
-                     apply max_Sn_n.
-           ++ simpl. destruct (insertAVL l v).
-              ** discriminate.
-              ** simpl in EQ. apply diff_One in EQ2. rewrite EQ2 in EQ.
-                 rewrite max_Sn_n in EQ. injection EQ as EQ. apply AVL_Node_L.
-                 --- inversion IHAVL1; auto. *)
-Admitted.
+        --  apply diff_Two in EQ. apply rebalance_right_BT; auto.
+        -- apply diff_MinusTwo in EQ. apply rebalance_left_BT; auto.
+        -- apply (insertAVL_height l v) in H. destruct H.
+           ++ rewrite <- H1 in H. apply diff_One with (v := v0) in H.
+              rewrite H in EQ. discriminate.
+           ++ rewrite <- H1 in H. apply diff_Zero with (v := v0) in H.
+              rewrite H in EQ. discriminate.
+    + destruct (v0 <? v).
+      * unfold rebalance. destruct (diff (Node v0 l (insertAVL r v))) eqn:EQ.
+        -- apply diff_Zero in EQ. apply BT_Node_Eq; auto.
+        -- apply diff_One in EQ. apply BT_Node_L; auto.
+        -- apply diff_MinusOne in EQ. apply BT_Node_R; auto.
+        -- apply diff_Two in EQ. apply rebalance_right_BT; auto.
+        -- apply diff_MinusTwo in EQ. apply rebalance_left_BT; auto.
+        -- apply (insertAVL_height r v) in H0. destruct H0.
+           ++ rewrite H1 in H0. symmetry in H0. apply diff_MinusOne with (v := v0) in H0.
+              rewrite H0 in EQ. discriminate.
+           ++ rewrite H1 in H0. symmetry in H0. apply diff_Zero with (v := v0) in H0.
+              rewrite H0 in EQ. discriminate.
+     * apply BT_Node_Eq; auto.
+  - simpl. destruct (v <? v0).
+    + unfold rebalance. destruct (diff (Node v0 (insertAVL l v) r)) eqn:EQ.
+        -- apply diff_Zero in EQ. apply BT_Node_Eq; auto.
+        -- apply diff_One in EQ. apply BT_Node_L; auto.
+        -- apply diff_MinusOne in EQ. apply BT_Node_R; auto.
+        --  apply diff_Two in EQ. apply rebalance_right_BT; auto.
+        -- apply diff_MinusTwo in EQ. apply rebalance_left_BT; auto.
+        -- apply (insertAVL_height l v) in H. destruct H.
+           ++ rewrite <- H1 in H. apply diff_Zero with (v := v0) in H.
+              rewrite H in EQ. discriminate.
+           ++ rewrite <- H in H1. symmetry in H1. apply diff_MinusOne with (v := v0) in H1.
+              rewrite H1 in EQ. discriminate.
+    + destruct (v0 <? v).
+      * unfold rebalance. destruct (diff (Node v0 l (insertAVL r v))) eqn:EQ.
+        -- apply diff_Zero in EQ. apply BT_Node_Eq; auto.
+        -- apply diff_One in EQ. apply BT_Node_L; auto.
+        -- apply diff_MinusOne in EQ. apply BT_Node_R; auto.
+        -- apply diff_Two in EQ. apply rebalance_right_BT; auto.
+        -- apply diff_MinusTwo in EQ. apply rebalance_left_BT; auto.
+        -- apply (insertAVL_height r v) in H0. destruct H0.
+           ++ rewrite H1 in H0. symmetry in H0. apply diff_MinusTwo with (v := v0) in H0.
+              rewrite H0 in EQ. discriminate.
+           ++ rewrite H1 in H0. symmetry in H0. apply diff_MinusOne with (v := v0) in H0.
+              rewrite H0 in EQ. discriminate.
+     * apply BT_Node_R; auto.
+  - simpl. destruct (v <? v0).
+    + unfold rebalance. destruct (diff (Node v0 (insertAVL l v) r)) eqn:EQ.
+        -- apply diff_Zero in EQ. apply BT_Node_Eq; auto.
+        -- apply diff_One in EQ. apply BT_Node_L; auto.
+        -- apply diff_MinusOne in EQ. apply BT_Node_R; auto.
+        --  apply diff_Two in EQ. apply rebalance_right_BT; auto.
+        -- apply diff_MinusTwo in EQ. apply rebalance_left_BT; auto.
+        -- apply (insertAVL_height l v) in H. destruct H.
+           ++ rewrite H1 in H. apply diff_Two with (v := v0) in H.
+              rewrite H in EQ. discriminate.
+           ++ rewrite H1 in H. apply diff_One with (v := v0) in H.
+              rewrite H in EQ. discriminate.
+    + destruct (v0 <? v).
+      * unfold rebalance. destruct (diff (Node v0 l (insertAVL r v))) eqn:EQ.
+        -- apply diff_Zero in EQ. apply BT_Node_Eq; auto.
+        -- apply diff_One in EQ. apply BT_Node_L; auto.
+        -- apply diff_MinusOne in EQ. apply BT_Node_R; auto.
+        -- apply diff_Two in EQ. apply rebalance_right_BT; auto.
+        -- apply diff_MinusTwo in EQ. apply rebalance_left_BT; auto.
+        -- apply (insertAVL_height r v) in H0. destruct H0.
+           ++ rewrite <- H1 in H0. symmetry in H0. apply diff_Zero with (v := v0) in H0.
+              rewrite H0 in EQ. discriminate.
+           ++ rewrite <- H0 in H1. apply diff_One with (v := v0) in H1.
+              rewrite H1 in EQ. discriminate.
+     * apply BT_Node_L; auto.
+Qed.
 
 Theorem insertAVL_BST: forall (t : tree) (v : nat),
   BST t -> BST (insertAVL t v).
