@@ -694,7 +694,43 @@ Lemma rebalance_left_BT: forall (l r : tree) (v : nat),
   BT l -> BT r -> S (S (height l)) = height r ->
   BT (rebalance_left (Node v l r)).
 Proof.
-Admitted.
+  intros. unfold rebalance_left. destruct r; try discriminate.
+  inversion H0.
+  - symmetry in H7. apply diff_Zero with (v:= v0) in H7. rewrite H7.
+    unfold left_rotate. apply diff_Zero in H7. simpl in H1. rewrite H7 in H1.
+    rewrite Nat.max_id in H1. injection H1 as H1. apply BT_Node_L.
+    + rewrite <- H1 in H7. apply BT_Node_R; auto.
+    + auto.
+    + simpl. f_equal. rewrite H7. rewrite <- H1. rewrite max_n_Sn. reflexivity.
+  - symmetry in H7. apply diff_MinusOne with (v:= v0) in H7. rewrite H7.
+    unfold left_rotate. apply diff_MinusOne in H7. simpl in H1.
+    rewrite <- H7 in H1. rewrite max_n_Sn in H1. injection H1 as H1.
+    apply BT_Node_Eq.
+    + apply BT_Node_Eq; auto.
+    + auto.
+    + simpl. rewrite H1. rewrite Nat.max_id. symmetry. apply H7.
+  - apply diff_One with (v:= v0) in H7. rewrite H7.
+    unfold left_rotate. unfold right_rotate. destruct r1.
+    + apply diff_One in H7. discriminate.
+    + apply diff_One in H7.  simpl in H1. simpl in H7. injection H7 as H7.
+      rewrite H7 in H1. rewrite max_Sn_n in H1. injection H1 as H1. inversion H5.
+      * rewrite H13 in H7.
+        rewrite Nat.max_id in H7. apply BT_Node_Eq.
+        -- rewrite <- H7 in H1. apply BT_Node_Eq; auto.
+        -- rewrite <- H13 in H7. apply BT_Node_Eq; auto.
+        -- simpl. rewrite H1. rewrite <- H7. rewrite H13. reflexivity.
+      * rewrite H13 in H7.
+        rewrite max_n_Sn in H7. apply BT_Node_Eq.
+        -- rewrite <- H7 in H1. apply BT_Node_L; auto.
+        -- rewrite H7 in H13. apply BT_Node_Eq; auto.
+        -- simpl. rewrite H1. rewrite <- H7. rewrite H13.
+           rewrite Nat.max_id. rewrite max_Sn_n. reflexivity.
+      * rewrite H13 in H7. rewrite max_Sn_n in H7. apply BT_Node_Eq.
+        -- rewrite <- H13 in H7. rewrite  <- H7 in H1. apply BT_Node_Eq; auto.
+        -- apply BT_Node_R; auto.
+        -- simpl. rewrite H1. rewrite <- H7. rewrite H13. rewrite Nat.max_id.
+           f_equal. apply max_n_Sn.
+Qed.
 
 Theorem insertAVL_BT: forall (t : tree) (v : nat),
   BT t -> BT (insertAVL t v).
