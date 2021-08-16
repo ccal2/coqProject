@@ -649,7 +649,46 @@ Lemma rebalance_right_BT: forall (l r : tree) (v : nat),
   BT l -> BT r -> height l = S (S (height r)) ->
   BT (rebalance_right (Node v l r)).
 Proof.
-Admitted.
+  intros. unfold rebalance_right. destruct l; try discriminate.
+  inversion H.
+  - symmetry in H7. apply diff_Zero with (v:= v0) in H7. rewrite H7.
+    unfold right_rotate. apply diff_Zero in H7. simpl in H1. injection H1 as H1.
+    rewrite H7 in H1. rewrite Nat.max_id in H1. apply BT_Node_R.
+    + auto.
+    + apply BT_Node_L; auto.
+    + simpl. rewrite H1. rewrite max_Sn_n. f_equal.
+      rewrite H7. rewrite H1. reflexivity.
+  - symmetry in H7. apply diff_MinusOne with (v:= v0) in H7. rewrite H7.
+    unfold right_rotate. unfold left_rotate. destruct l2.
+    + apply diff_MinusOne in H7. discriminate.
+    + apply diff_MinusOne in H7. simpl in H7. simpl in H1.
+      rewrite <- H7 in H1. rewrite max_n_Sn in H1. injection H1 as H1.
+      injection H7 as H7. inversion H6.
+      * rewrite H13 in H7. rewrite Nat.max_id in H7. apply BT_Node_Eq.
+        -- apply BT_Node_Eq; auto.
+        -- apply BT_Node_Eq; auto. rewrite <- H13 in H7. rewrite H7 in H1.
+           symmetry in H1. apply H1.
+        -- simpl. rewrite <- H1. rewrite H7. rewrite Nat.max_id. rewrite <- H13.
+           rewrite Nat.max_id. auto.
+      * rewrite H13 in H7. rewrite max_n_Sn in H7. apply BT_Node_Eq.
+        -- apply BT_Node_L; auto.
+        -- apply BT_Node_Eq; auto. rewrite <- H13 in H7. rewrite H7 in H1.
+           symmetry in H1. apply H1.
+        -- simpl. rewrite <- H1. rewrite H7. rewrite H13. rewrite Nat.max_id.
+           rewrite max_Sn_n. auto.
+      * rewrite H13 in H7. rewrite max_Sn_n in H7. apply BT_Node_Eq.
+        -- apply BT_Node_Eq; auto. rewrite H7. apply H13.
+        -- apply BT_Node_R; auto. rewrite <- H7. symmetry. apply H1.
+        -- simpl. rewrite <- H1. rewrite H7. rewrite H13. rewrite Nat.max_id.
+           rewrite max_n_Sn. reflexivity.
+  - apply diff_One with (v:= v0) in H7. rewrite H7.
+    apply diff_One in H7. simpl in H1. injection H1 as H1. unfold right_rotate.
+    rewrite H7 in H1. rewrite max_Sn_n in H1. injection H1 as H1. apply BT_Node_Eq.
+    + auto.
+    + apply BT_Node_Eq; auto.
+    + simpl. rewrite H1. rewrite Nat.max_id.
+      rewrite H7. rewrite H1. reflexivity.
+Qed.
 
 Lemma rebalance_left_BT: forall (l r : tree) (v : nat),
   BT l -> BT r -> S (S (height l)) = height r ->
