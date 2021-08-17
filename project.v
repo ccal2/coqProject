@@ -398,7 +398,9 @@ Qed.
 Lemma max_SSn_n: forall (n: nat),
   max (S (S n)) n = S ( S n).
 Proof.
-Admitted.
+  intros n. induction n as [| n' IHn']; auto.
+  simpl. destruct n'; auto.
+Qed.
 
 (*Theorem inserbalanceAVL: forall (l r: tree) (v v0 :nat),
   height l = height r -> diff (Node v0 (insertAVL l v) r)  *)
@@ -834,13 +836,4 @@ Proof.
   (try destruct (v <? v'));
   (try destruct (v' <? v));
   intros H; discriminate H.
-(* resolução original (passo a passo):
-  intros t v. induction t as [| v' l IHl r IHr]; simpl.
-  - intros H. discriminate H.
-  - destruct (v <? v').
-    + intros H. discriminate H.
-    + destruct (v' <? v).
-      * intros H. discriminate H.
-      * intros H. discriminate H.
-*)
 Qed.
