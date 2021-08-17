@@ -357,6 +357,22 @@ Definition rebalance_right (t : tree) : tree :=
                   end
   end.
 
+Theorem rebalance_right_BST: forall (t : tree),
+  BST t -> BST (rebalance_right t).
+Proof.
+  intros t H. unfold rebalance_right. inversion H.
+  - constructor.
+  - destruct (diff l); apply right_rotate_BST; subst; auto.
+    constructor; auto.
+    + apply left_rotate_BST; auto.
+    + destruct l as [| v1 l1 r1]; auto.
+      simpl. destruct r1 as [| v2 l2 r2]; auto.
+      inversion H. simpl in H9.
+      destruct H9 as [H11 [H12 [H13 [H14]]]].
+      simpl in H2. destruct H2 as [H15 [H16]].
+      simpl. repeat split; assumption.
+Qed.
+
 Definition rebalance_left (t : tree) : tree :=
   match t with
   | Nil => Nil
@@ -365,6 +381,20 @@ Definition rebalance_left (t : tree) : tree :=
                   | _ => left_rotate (Node v l r)
                   end
   end.
+
+Theorem rebalance_left_BST: forall (t : tree),
+  BST t -> BST (rebalance_left t).
+Proof.
+  intros t H. unfold rebalance_left. inversion H.
+  - constructor.
+  - destruct (diff r); apply left_rotate_BST; subst; auto.
+    constructor; auto.
+    + apply right_rotate_BST; auto.
+    + unfold right_rotate. destruct r as [| v1 l1 r1];
+      auto. destruct l1 as [| v2 l2 r2]; auto.
+      simpl in H3. destruct H3 as [H5 [[H7 [H8]]]].
+      simpl. repeat split; assumption.
+Qed.
 
 Definition rebalance (t : tree) : tree :=
   match diff t with
