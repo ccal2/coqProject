@@ -848,13 +848,22 @@ Qed.
 Theorem insertAVL_BST: forall (t : tree) (v : nat),
   BST t -> BST (insertAVL t v).
 Proof.
-  intros t v H. induction H; simpl.
+  intros t v H. induction H as [| v1 l1 r1 H1 IHl H2 IHr H3 H4]; simpl.
   - repeat constructor.
-  - inversion IHBST1.
-    + pose proof (insertAVL_not_Nil l v) as H5.
-      rewrite H4 in H5. contradiction.
-    + destruct (v <? v0).
-      * unfold rebalance. destruct (diff (Node v0 (Node v1 l0 r0) r)).
+  - inversion IHl as [| v2 l2 r2].
+    + pose proof (insertAVL_not_Nil l1 v) as H5.
+      rewrite H in H5. contradiction.
+    + destruct (v <? v1).
+      * unfold rebalance. destruct (diff (Node v1 (Node v2 l2 r2) r1)).
+        -- constructor.
+          ++ rewrite H7. assumption.
+          ++ assumption.
+          ++ inversion IHl as [| v3 l3 r3].
+            ** pose proof (insertAVL_not_Nil l1 v) as H9.
+              rewrite H8 in H9. contradiction.
+            ** simpl. repeat split.
+              ---
+
       (*
         try (unfold rebalance_right; destruct (diff (Node v1 l0 r0)));
         try (unfold right_rotate; destruct (left_rotate (Node v1 l0 r0)));
