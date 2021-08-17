@@ -403,6 +403,16 @@ Definition rebalance (t : tree) : tree :=
   | _ => t
   end.
 
+Theorem rebalance_BST: forall (t : tree),
+  BST t -> BST (rebalance t).
+Proof.
+  intros t H. unfold rebalance. inversion H.
+  - constructor.
+  - destruct (diff (Node v l r)); subst; auto.
+    + apply rebalance_right_BST; auto.
+    + apply rebalance_left_BST; auto.
+Qed.
+
 Fixpoint insertAVL (t : tree) (v: nat): tree :=
   match t with
   | Nil => Node v Nil Nil
