@@ -132,10 +132,10 @@ Proof.
     auto.
 Qed.
 
-Theorem left_rotate_BST: forall (v: nat) (t : tree),
+Theorem left_rotate_BST: forall (t : tree),
   BST t -> BST (left_rotate t).
 Proof.
-  intros v t H. inversion H; unfold left_rotate.
+  intros t H. inversion H; unfold left_rotate.
   - constructor.
   - destruct r as [| v' l' r'].
     + rewrite H4. apply H.
@@ -147,7 +147,7 @@ Proof.
       * simpl in H3. destruct H3 as [H3 [H12 H13]].
         simpl. repeat split.
         -- auto.
-        -- apply ForallT_lt_trans with (n := v0); auto.
+        -- apply ForallT_lt_trans with (n := v); auto.
         -- inversion H1. auto.
       * inversion H1. auto.
 Qed.
@@ -172,10 +172,10 @@ Proof.
     auto.
 Qed.
 
-Theorem right_rotate_BST: forall (v: nat) (t : tree),
+Theorem right_rotate_BST: forall (t : tree),
   BST t -> BST (right_rotate t).
 Proof.
-  intros v t H. inversion H; unfold right_rotate.
+  intros t H. inversion H; unfold right_rotate.
   - constructor.
   - destruct l as [| v' l' r'].
     + rewrite H4. auto.
@@ -189,7 +189,7 @@ Proof.
         -- simpl in H2. destruct H2 as [H2 [H5 H6]]. auto.
         -- inversion H0. auto.
         -- simpl in H2. destruct H2 as [H2 [H5 H6]].
-           apply ForallT_gt_trans with (n := v0); auto.
+           apply ForallT_gt_trans with (n := v); auto.
 Qed.
 
 Inductive Diff : Type :=
