@@ -816,9 +816,54 @@ Proof.
      * apply BT_Node_L; auto.
 Qed.
 
+Ltac match_contradiction exp :=
+  try destruct exp; try contradiction; try (repeat (intros H; discriminate H)).
+
+Lemma insertAVL_not_Nil: forall (t : tree) (v : nat),
+  insertAVL t v <> Nil.
+Proof.
+  intros t v. induction t as [| v' l IHl r IHr]; simpl.
+  - intros H. discriminate H.
+  - destruct (v <? v').
+    + unfold rebalance. match_contradiction (diff (Node v' (insertAVL l v) r)).
+      * unfold rebalance_right. destruct (diff (insertAVL l v));
+        unfold right_rotate; try match_contradiction (insertAVL l v);
+        try match_contradiction (left_rotate (Node v0 t1 t2)).
+      * unfold rebalance_left. destruct (diff r);
+        unfold left_rotate; try match_contradiction r;
+        try match_contradiction (right_rotate (Node v0 r1 r2)).
+    + destruct (v' <? v); try (intros H; discriminate H).
+      unfold rebalance. destruct (diff (Node v' (insertAVL l v) r));
+      try match_contradiction (diff (Node v' l (insertAVL r v)));
+      unfold rebalance_right; try match_contradiction (diff l);
+      unfold right_rotate; try match_contradiction l;
+      try match_contradiction (left_rotate (Node v0 l1 l2));
+      unfold rebalance_left; try match_contradiction (diff (insertAVL r v));
+      unfold left_rotate; try match_contradiction (insertAVL r v);
+      try match_contradiction (right_rotate (Node v0 t1 t2));
+      try match_contradiction (right_rotate (Node v1 t1 t2));
+      try match_contradiction (right_rotate (Node v2 t3 t4)).
+Qed.
+
 Theorem insertAVL_BST: forall (t : tree) (v : nat),
   BST t -> BST (insertAVL t v).
 Proof.
+  intros t v H. induction H; simpl.
+  - repeat constructor.
+  - inversion IHBST1.
+    + pose proof (insertAVL_not_Nil l v) as H5.
+      rewrite H4 in H5. contradiction.
+    + destruct (v <? v0).
+      * unfold rebalance. destruct (diff (Node v0 (Node v1 l0 r0) r)).
+      (*
+        try (unfold rebalance_right; destruct (diff (Node v1 l0 r0)));
+        try (unfold right_rotate; destruct (left_rotate (Node v1 l0 r0)));
+        try (unfold rebalance_left; destruct (diff r));
+        try (unfold left_rotate; destruct (right_rotate r));
+        try destruct r;
+        try (constructor; try (rewrite H3; assumption); try constructor).
+        -- rewrite <- H3 in IHBST1. apply BST_Node in IHBST1.
+      *)
 Admitted.
 
 Theorem insertAVL_AVL:  forall (t : tree) (v : nat),
