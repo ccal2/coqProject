@@ -87,6 +87,17 @@ Fixpoint InT (t : tree) (v : nat) : Prop :=
   | Node v' l r => v = v' \/ InT l v \/ InT r v
   end.
 
+Lemma ForallT_InT: forall (t : tree) (v : nat) (P : nat -> Prop),
+  ForallT t P -> InT t v -> P v.
+Proof.
+  intros t v P H H'. induction t as [| v' l IHl r IHr].
+  - inversion H'.
+  - simpl in H'. simpl in H. destruct H' as [H' | [H' | H']].
+    + destruct H as [H _]. rewrite H'. apply H.
+    + destruct H as [_ [H _]]. apply IHl; auto.
+    + destruct H as [_ [_ H]]. apply IHr; auto.
+Qed.
+
 Theorem searchBST: forall (v : nat) (t : tree),
   BST t -> search t v = true <-> InT t v.
 Proof.
@@ -97,20 +108,18 @@ Proof.
     + destruct (v1 <? v) eqn: E2.
       * intros H. right. right. auto.
       * intros H. left. clear H.
-        apply Nat.ltb_ge in E1, E2.
+        apply Nat.ltb_ge in E1. apply Nat.ltb_ge in E2.
         apply Nat.le_antisymm; auto.
   - simpl. auto.
-  - simpl. intros [H | [H | H]]; destruct (v <? v1) eqn: E1.
-    + apply Nat.ltb_lt in E1. rewrite H in E1.
-      pose proof (Nat.lt_irrefl v1) as H5. contradiction.
-    + destruct (v1 <? v) eqn: E2; auto.
-      apply Nat.ltb_lt in E2. rewrite H in E2.
-      pose proof (Nat.lt_irrefl v1) as H5. contradiction.
-    + auto.
-    + destruct (v1 <? v) eqn: E2; auto. apply H4. admit.
-    + apply H3. admit.
-    + destruct (v1 <? v) eqn: E2; auto.  
-Admitted.
+  - simpl. intros [H | [H | H]].
+    + rewrite H. rewrite Nat.ltb_irrefl. reflexivity.
+    + apply ForallT_InT with (v := v) in IHl1; auto.
+      apply Nat.ltb_lt in IHl1. rewrite IHl1. apply H3. apply H.
+    + apply ForallT_InT with (v := v) in IHr1; auto.
+      unfold gt in IHr1. apply Nat.ltb_lt in IHr1. rewrite IHr1.
+      apply Nat.ltb_lt in IHr1. apply Nat.lt_le_incl in IHr1.
+      apply Nat.ltb_ge in IHr1. rewrite IHr1. apply H4. apply H.
+Qed.
 
 (* -------------- AVL -------------- *)
 Fixpoint height (t : tree) : nat :=
@@ -515,8 +524,6 @@ Proof.
   simpl. destruct n'; auto.
 Qed.
 
-(*Theorem inserbalanceAVL: forall (l r: tree) (v v0 :nat),
-  height l = height r -> diff (Node v0 (insertAVL l v) r)  *)
 Lemma insertAVL_height: forall (t : tree) (v: nat),
   BT t ->
   height (insertAVL t v) = S (height t) \/ height (insertAVL t v) = height t.
