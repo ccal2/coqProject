@@ -190,7 +190,7 @@ Proof.
       * inversion H1. auto.
 Qed.
 
-Theorem ForallT_left_rotate: forall (P : nat -> Prop) (t : tree),
+Lemma ForallT_left_rotate: forall (P : nat -> Prop) (t : tree),
   ForallT t P ->
   ForallT (left_rotate t) P.
 Proof.
@@ -240,7 +240,7 @@ Proof.
            apply ForallT_gt_trans with (n := v); auto.
 Qed.
 
-Theorem ForallT_right_rotate: forall (P : nat -> Prop) (t : tree),
+Lemma ForallT_right_rotate: forall (P : nat -> Prop) (t : tree),
   ForallT t P ->
   ForallT (right_rotate t) P.
 Proof.
@@ -415,7 +415,7 @@ Definition rebalance_right (t : tree) : tree :=
                   end
   end.
 
-Theorem rebalance_right_BST: forall (t : tree),
+Lemma rebalance_right_BST: forall (t : tree),
   BST t -> BST (rebalance_right t).
 Proof.
   intros t H. unfold rebalance_right. inversion H.
@@ -431,7 +431,7 @@ Proof.
       simpl. repeat split; assumption.
 Qed.
 
-Theorem ForallT_rebalance_right: forall (P : nat -> Prop) (t : tree),
+Lemma ForallT_rebalance_right: forall (P : nat -> Prop) (t : tree),
   ForallT t P ->
   ForallT (rebalance_right t) P.
 Proof.
@@ -452,7 +452,7 @@ Definition rebalance_left (t : tree) : tree :=
                   end
   end.
 
-Theorem rebalance_left_BST: forall (t : tree),
+Lemma rebalance_left_BST: forall (t : tree),
   BST t -> BST (rebalance_left t).
 Proof.
   intros t H. unfold rebalance_left. inversion H.
@@ -466,7 +466,7 @@ Proof.
       simpl. repeat split; assumption.
 Qed.
 
-Theorem ForallT_rebalance_left: forall (P : nat -> Prop) (t : tree),
+Lemma ForallT_rebalance_left: forall (P : nat -> Prop) (t : tree),
   ForallT t P ->
   ForallT (rebalance_left t) P.
 Proof.
@@ -965,7 +965,7 @@ Proof.
       try match_contradiction (right_rotate (Node v2 t3 t4)).
 Qed.
 
-Theorem ForallT_rebalance: forall (P : nat -> Prop) (t : tree),
+Lemma ForallT_rebalance: forall (P : nat -> Prop) (t : tree),
   ForallT t P ->
   ForallT (rebalance t) P.
 Proof.
@@ -975,7 +975,7 @@ Proof.
   - apply ForallT_rebalance_left. auto.
 Qed.
 
-Theorem ForallT_insertAVL: forall (P : nat -> Prop) (t : tree) (v: nat),
+Lemma ForallT_insertAVL: forall (P : nat -> Prop) (t : tree) (v: nat),
   P v ->
   ForallT t P ->
   ForallT (insertAVL t v) P.
