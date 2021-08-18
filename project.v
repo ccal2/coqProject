@@ -90,6 +90,26 @@ Fixpoint InT (t : tree) (v : nat) : Prop :=
 Theorem searchBST: forall (v : nat) (t : tree),
   BST t -> search t v = true <-> InT t v.
 Proof.
+  intros v t H. split; induction H as [| v1 l1 r1 H1 H3 H2 H4 IHl1 IHr1].
+  - intros H. discriminate.
+  - simpl. destruct (v <? v1) eqn: E1.
+    + intros H. right. left. auto.
+    + destruct (v1 <? v) eqn: E2.
+      * intros H. right. right. auto.
+      * intros H. left. clear H.
+        apply Nat.ltb_ge in E1, E2.
+        apply Nat.le_antisymm; auto.
+  - simpl. auto.
+  - simpl. intros [H | [H | H]]; destruct (v <? v1) eqn: E1.
+    + apply Nat.ltb_lt in E1. rewrite H in E1.
+      pose proof (Nat.lt_irrefl v1) as H5. contradiction.
+    + destruct (v1 <? v) eqn: E2; auto.
+      apply Nat.ltb_lt in E2. rewrite H in E2.
+      pose proof (Nat.lt_irrefl v1) as H5. contradiction.
+    + auto.
+    + destruct (v1 <? v) eqn: E2; auto. apply H4. admit.
+    + apply H3. admit.
+    + destruct (v1 <? v) eqn: E2; auto.  
 Admitted.
 
 (* -------------- AVL -------------- *)
