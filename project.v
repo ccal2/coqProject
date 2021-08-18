@@ -15,6 +15,15 @@ Fixpoint insert (t : tree) (v: nat): tree :=
                         else t
   end.
 
+Lemma insert_not_Nil : forall (t : tree) (v : nat),
+  insert t v <> Nil.
+Proof.
+  intros t v. induction t as [| v' l IHl r IHr]; simpl;
+  (try destruct (v <? v'));
+  (try destruct (v' <? v));
+  intros H; discriminate H.
+Qed.
+
 Fixpoint search (t:tree) (v:nat) : bool :=
    match t with
    | Nil => false
@@ -985,13 +994,4 @@ Proof.
   unfold AVL. intros. destruct H. split.
   - apply insertAVL_BST. apply H.
   - apply insertAVL_BT. apply H0.
-Qed.
-
-Lemma insert_not_Nil : forall (t : tree) (v : nat),
-  insert t v <> Nil.
-Proof.
-  intros t v. induction t as [| v' l IHl r IHr]; simpl;
-  (try destruct (v <? v'));
-  (try destruct (v' <? v));
-  intros H; discriminate H.
 Qed.
