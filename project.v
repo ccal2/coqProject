@@ -954,7 +954,14 @@ Proof.
       * apply ForallT_rebalance. simpl.
         repeat split; auto.
       * simpl. repeat split; auto.
-Qed.  
+Qed.
+
+Lemma ltb_symm: forall (n m : nat),
+  (n < m) -> (m > n).
+Proof.
+  intros n m H. induction n as [| n'];
+  destruct m as [| m']; auto.
+Qed.
 
 Theorem insertAVL_BST: forall (t : tree) (v : nat),
   BST t -> BST (insertAVL t v).
@@ -965,10 +972,12 @@ Proof.
     + apply rebalance_BST. constructor; auto.
       apply ForallT_insertAVL; auto.
       apply Nat.ltb_lt in Ev1. auto.
-    + destruct (v1 <? v).
+    + destruct (v1 <? v) eqn: Ev2.
       * apply rebalance_BST. constructor; auto.
-        apply ForallT_insertAVL. apply Nat.ltb_ge in Ev1.
-Admitted.
+        apply ForallT_insertAVL; auto.
+        apply Nat.ltb_lt in Ev2. apply ltb_symm in Ev2. auto.
+      * constructor; auto.
+Qed.
 
 Theorem insertAVL_AVL:  forall (t : tree) (v : nat),
   AVL t -> AVL (insertAVL t v).
