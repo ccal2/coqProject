@@ -152,6 +152,16 @@ Proof.
       * inversion H1. auto.
 Qed.
 
+Theorem ForallT_left_rotate: forall (P : nat -> Prop) (t : tree),
+  ForallT t P ->
+  ForallT (left_rotate t) P.
+Proof.
+  intros P t H. induction t as [| v1 l1 IHl1 r1 IHr1]; auto.
+  unfold left_rotate. destruct r1 as [| l2 r2]; auto.
+  simpl. simpl in H. destruct H as [H1 [H2 [H3 [H4 H5]]]].
+  repeat split; auto.
+Qed.
+
 Definition right_rotate (t: tree) : tree :=
   match t with
   | Node v1 (Node v2 l2 r2) r1 => Node v2 l2 (Node v1 r2 r1)
@@ -190,6 +200,16 @@ Proof.
         -- inversion H0. auto.
         -- simpl in H2. destruct H2 as [H2 [H5 H6]].
            apply ForallT_gt_trans with (n := v); auto.
+Qed.
+
+Theorem ForallT_right_rotate: forall (P : nat -> Prop) (t : tree),
+  ForallT t P ->
+  ForallT (right_rotate t) P.
+Proof.
+  intros P t H. induction t as [| v1 l1 IHl1 r1 IHr1]; auto.
+  unfold right_rotate. destruct l1 as [| l2 r2]; auto.
+  simpl. simpl in H. destruct H as [H1 [[H2 [H3 H4]] H5]].
+  repeat split; auto.
 Qed.
 
 Inductive Diff : Type :=
@@ -373,6 +393,18 @@ Proof.
       simpl. repeat split; assumption.
 Qed.
 
+Theorem ForallT_rebalance_right: forall (P : nat -> Prop) (t : tree),
+  ForallT t P ->
+  ForallT (rebalance_right t) P.
+Proof.
+  intros P t H. induction t as [| v1 l1 IHl1 r1 IHr1]; auto.
+  unfold rebalance_right. destruct (diff l1);
+  apply ForallT_right_rotate; auto.
+  simpl. simpl in H. destruct H as [H1 [H2 H3]].
+  repeat split; auto.
+  apply ForallT_left_rotate. auto.
+Qed.
+
 Definition rebalance_left (t : tree) : tree :=
   match t with
   | Nil => Nil
@@ -394,6 +426,18 @@ Proof.
       auto. destruct l1 as [| v2 l2 r2]; auto.
       simpl in H3. destruct H3 as [H5 [[H7 [H8]]]].
       simpl. repeat split; assumption.
+Qed.
+
+Theorem ForallT_rebalance_left: forall (P : nat -> Prop) (t : tree),
+  ForallT t P ->
+  ForallT (rebalance_left t) P.
+Proof.
+  intros P t H. induction t as [| v1 l1 IHl1 r1 IHr1]; auto.
+  unfold rebalance_left. destruct (diff r1);
+  apply ForallT_left_rotate; auto.
+  simpl. simpl in H. destruct H as [H1 [H2 H3]].
+  repeat split; auto.
+  apply ForallT_right_rotate. auto.
 Qed.
 
 Definition rebalance (t : tree) : tree :=
@@ -885,34 +929,45 @@ Proof.
       try match_contradiction (right_rotate (Node v2 t3 t4)).
 Qed.
 
+Theorem ForallT_rebalance: forall (P : nat -> Prop) (t : tree),
+  ForallT t P ->
+  ForallT (rebalance t) P.
+Proof.
+  intros P t H1. induction t as [| v1 l1 IHl1 r1 IHr1]; auto.
+  unfold rebalance. destruct (diff (Node v1 l1 r1)); auto.
+  - apply ForallT_rebalance_right. auto.
+  - apply ForallT_rebalance_left. auto.
+Qed.
+
+Theorem ForallT_insertAVL: forall (P : nat -> Prop) (t : tree) (v: nat),
+  P v ->
+  ForallT t P ->
+  ForallT (insertAVL t v) P.
+Proof.
+  intros P t v H1 H2. induction t as [| v1 l1 IHl1 r1 IHr1]; simpl.
+  - repeat split; auto.
+  - simpl in H2. destruct H2 as [H2 [H3 H4]].
+    destruct (v <? v1).
+    + apply ForallT_rebalance. simpl.
+      repeat split; auto.
+    + destruct (v1 <? v).
+      * apply ForallT_rebalance. simpl.
+        repeat split; auto.
+      * simpl. repeat split; auto.
+Qed.  
+
 Theorem insertAVL_BST: forall (t : tree) (v : nat),
   BST t -> BST (insertAVL t v).
 Proof.
-  intros t v H. induction H as [| v1 l1 r1 H1 IHl H2 IHr H3 H4]; simpl.
+  intros t v H. induction H as [| v1 l1 r1 H1 IHl1 H2 IHr1 H3 H4]; simpl.
   - repeat constructor.
-  - inversion IHl as [| v2 l2 r2].
-    + pose proof (insertAVL_not_Nil l1 v) as H5.
-      rewrite H in H5. contradiction.
-    + destruct (v <? v1).
-      * unfold rebalance. destruct (diff (Node v1 (Node v2 l2 r2) r1)).
-        -- constructor.
-          ++ rewrite H7. assumption.
-          ++ assumption.
-          ++ inversion IHl as [| v3 l3 r3].
-            ** pose proof (insertAVL_not_Nil l1 v) as H9.
-              rewrite H8 in H9. contradiction.
-            ** simpl. repeat split.
-              ---
-
-      (*
-        try (unfold rebalance_right; destruct (diff (Node v1 l0 r0)));
-        try (unfold right_rotate; destruct (left_rotate (Node v1 l0 r0)));
-        try (unfold rebalance_left; destruct (diff r));
-        try (unfold left_rotate; destruct (right_rotate r));
-        try destruct r;
-        try (constructor; try (rewrite H3; assumption); try constructor).
-        -- rewrite <- H3 in IHBST1. apply BST_Node in IHBST1.
-      *)
+  - destruct (v <? v1) eqn: Ev1.
+    + apply rebalance_BST. constructor; auto.
+      apply ForallT_insertAVL; auto.
+      apply Nat.ltb_lt in Ev1. auto.
+    + destruct (v1 <? v).
+      * apply rebalance_BST. constructor; auto.
+        apply ForallT_insertAVL. apply Nat.ltb_ge in Ev1.
 Admitted.
 
 Theorem insertAVL_AVL:  forall (t : tree) (v : nat),
