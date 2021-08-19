@@ -170,7 +170,7 @@ Proof.
     auto.
 Qed.
 
-Theorem left_rotate_BST: forall (t : tree),
+Lemma left_rotate_BST: forall (t : tree),
   BST t -> BST (left_rotate t).
 Proof.
   intros t H. inversion H; unfold left_rotate.
@@ -220,7 +220,7 @@ Proof.
     auto.
 Qed.
 
-Theorem right_rotate_BST: forall (t : tree),
+Lemma right_rotate_BST: forall (t : tree),
   BST t -> BST (right_rotate t).
 Proof.
   intros t H. inversion H; unfold right_rotate.
