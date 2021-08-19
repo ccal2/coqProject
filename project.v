@@ -5,7 +5,7 @@ Inductive tree : Type :=
   | Nil
   | Node (v : nat) (l r : tree).
 
-Fixpoint insert (t : tree) (v: nat): tree :=
+Fixpoint insert (t : tree) (v : nat) : tree :=
   match t with
   | Nil => Node v Nil Nil
   | Node v' l r => if v <? v'
@@ -24,7 +24,7 @@ Proof.
   intros H; discriminate H.
 Qed.
 
-Fixpoint search (t:tree) (v:nat) : bool :=
+Fixpoint search (t : tree) (v : nat) : bool :=
    match t with
    | Nil => false
    | Node v' l r => if v <? v'
@@ -42,7 +42,7 @@ Fixpoint ForallT (t : tree) (P : nat -> Prop) : Prop :=
 
 Inductive BST : tree -> Prop :=
   | BST_Empty: BST Nil
-  | BST_Node (v : nat) (l r : tree):
+  | BST_Node (v : nat) (l r : tree) :
     BST l ->
     BST r ->
     ForallT l (fun x => x < v) ->
@@ -87,7 +87,7 @@ Fixpoint InT (t : tree) (v : nat) : Prop :=
   | Node v' l r => v = v' \/ InT l v \/ InT r v
   end.
 
-Lemma ForallT_InT: forall (t : tree) (v : nat) (P : nat -> Prop),
+Lemma ForallT_InT : forall (t : tree) (v : nat) (P : nat -> Prop),
   ForallT t P -> InT t v -> P v.
 Proof.
   intros t v P H H'. induction t as [| v' l IHl r IHr].
@@ -98,7 +98,7 @@ Proof.
     + destruct H as [_ [_ H]]. apply IHr; auto.
 Qed.
 
-Theorem searchBST: forall (v : nat) (t : tree),
+Theorem searchBST : forall (v : nat) (t : tree),
   BST t -> search t v = true <-> InT t v.
 Proof.
   intros v t H. split; induction H as [| v1 l1 r1 H1 H3 H2 H4 IHl1 IHr1].
@@ -131,17 +131,17 @@ Fixpoint height (t : tree) : nat :=
 (* BT = Balanced Tree *)
 Inductive BT : tree -> Prop :=
   | BT_Empty: BT Nil
-  | BT_Node_Eq (v : nat) (l r : tree): 
+  | BT_Node_Eq (v : nat) (l r : tree) : 
     BT l ->
     BT r ->
     height r = height l ->
     BT (Node v l r)
-  | BT_Node_R (v : nat) (l r : tree): 
+  | BT_Node_R (v : nat) (l r : tree) : 
     BT l ->
     BT r ->
     height r = S (height l) ->
     BT (Node v l r)
-  | BT_Node_L (v : nat) (l r : tree): 
+  | BT_Node_L (v : nat) (l r : tree) : 
     BT l ->
     BT r ->
     height l = S (height r) ->
@@ -150,7 +150,7 @@ Inductive BT : tree -> Prop :=
 Definition AVL (t : tree) : Prop :=
   BST t /\ BT t.
 
-Definition left_rotate (t: tree) : tree :=
+Definition left_rotate (t : tree) : tree :=
   match t with
   | Node v1 l1 (Node v2 l2 r2) => Node v2 (Node v1 l1 l2) r2
   | _ => t
@@ -170,7 +170,7 @@ Proof.
     auto.
 Qed.
 
-Lemma left_rotate_BST: forall (t : tree),
+Lemma left_rotate_BST : forall (t : tree),
   BST t -> BST (left_rotate t).
 Proof.
   intros t H. inversion H; unfold left_rotate.
@@ -190,7 +190,7 @@ Proof.
       * inversion H1. auto.
 Qed.
 
-Lemma ForallT_left_rotate: forall (P : nat -> Prop) (t : tree),
+Lemma ForallT_left_rotate : forall (P : nat -> Prop) (t : tree),
   ForallT t P ->
   ForallT (left_rotate t) P.
 Proof.
@@ -200,7 +200,7 @@ Proof.
   repeat split; auto.
 Qed.
 
-Definition right_rotate (t: tree) : tree :=
+Definition right_rotate (t : tree) : tree :=
   match t with
   | Node v1 (Node v2 l2 r2) r1 => Node v2 l2 (Node v1 r2 r1)
   | _ => t
@@ -220,7 +220,7 @@ Proof.
     auto.
 Qed.
 
-Lemma right_rotate_BST: forall (t : tree),
+Lemma right_rotate_BST : forall (t : tree),
   BST t -> BST (right_rotate t).
 Proof.
   intros t H. inversion H; unfold right_rotate.
@@ -240,7 +240,7 @@ Proof.
            apply ForallT_gt_trans with (n := v); auto.
 Qed.
 
-Lemma ForallT_right_rotate: forall (P : nat -> Prop) (t : tree),
+Lemma ForallT_right_rotate : forall (P : nat -> Prop) (t : tree),
   ForallT t P ->
   ForallT (right_rotate t) P.
 Proof.
@@ -276,7 +276,7 @@ Definition diff (t : tree) : Diff :=
                     else Impossible
   end.
 
-Lemma diff_Zero : forall v l r,
+Lemma diff_Zero : forall (v : nat) (l r : tree),
   diff (Node v l r) = Zero <-> height l = height r.
 Proof.
   intros. split.
@@ -284,13 +284,13 @@ Proof.
     destruct (height l =? height r) eqn: E.
     apply Nat.eqb_eq; apply E.
     destruct (height l =? S (height r)). discriminate.
-    destruct (S (height l) =? height r).  discriminate.
+    destruct (S (height l) =? height r). discriminate.
     destruct (height l =? S (S (height r))). discriminate.
     destruct (S (S (height l)) =? height r); discriminate.
   - intros H. apply Nat.eqb_eq in H. unfold diff. rewrite H. auto.
 Qed.
 
-Lemma diff_One : forall v l r,
+Lemma diff_One : forall (v : nat) (l r : tree),
   diff (Node v l r) = One <-> height l = S (height r).
 Proof.
   intros. split.
@@ -308,7 +308,7 @@ Proof.
     apply Nat.eqb_eq in H. rewrite H. auto.
 Qed.
 
-Lemma neq_succ_2_diag_l: forall n : nat,
+Lemma neq_succ_2_diag_l : forall (n : nat),
   S (S n) <> n.
 Proof.
   intros n H. induction n as [| n' IHn'].
@@ -316,7 +316,7 @@ Proof.
   - apply Nat.succ_inj in H. apply IHn' in H. inversion H.
 Qed.
 
-Lemma diff_MinusOne : forall v l r,
+Lemma diff_MinusOne : forall (v : nat) (l r : tree),
   diff (Node v l r) = MinusOne <-> S (height l) = height r.
 Proof.
   intros. split.
@@ -337,7 +337,7 @@ Proof.
     apply Nat.eqb_eq in H. rewrite H. reflexivity.
 Qed.
 
-Lemma neq_succ_3_diag_l: forall n : nat,
+Lemma neq_succ_3_diag_l : forall (n : nat),
   n <> S (S (S n)).
 Proof.
   intros n H. induction n as [| n' IHn'].
@@ -345,7 +345,7 @@ Proof.
   - apply Nat.succ_inj in H. apply IHn' in H. inversion H.
 Qed.
 
-Lemma diff_Two : forall v l r,
+Lemma diff_Two : forall (v : nat) (l r : tree),
   diff (Node v l r) = Two <-> height l = S (S (height r)).
 Proof.
   intros. split.
@@ -370,7 +370,7 @@ Proof.
     apply Nat.eqb_eq in H. rewrite H. reflexivity.
 Qed.
 
-Lemma neq_succ_4_diag_l: forall n : nat,
+Lemma neq_succ_4_diag_l : forall (n : nat),
   S (S (S (S n))) <> n.
 Proof.
   intros n H. induction n as [| n' IHn'].
@@ -378,7 +378,7 @@ Proof.
   - apply Nat.succ_inj in H. apply IHn' in H. inversion H.
 Qed.
 
-Lemma diff_MinusTwo : forall v l r,
+Lemma diff_MinusTwo : forall (v : nat) (l r : tree),
   diff (Node v l r) = MinusTwo <-> S (S (height l)) = height r.
 Proof.
   intros. split.
@@ -387,7 +387,7 @@ Proof.
     destruct (height l =? S (height r)). discriminate.
     destruct (S (height l) =? height r). discriminate.
     destruct (height l =? S (S (height r))). discriminate.
-    destruct (S (S (height l)) =? height r)  eqn: E.
+    destruct (S (S (height l)) =? height r) eqn: E.
     apply Nat.eqb_eq; apply E. inversion H.
   - intros H. unfold diff.
     destruct (height l =? height r) eqn: E1.
@@ -415,7 +415,7 @@ Definition rebalance_right (t : tree) : tree :=
                   end
   end.
 
-Lemma rebalance_right_BST: forall (t : tree),
+Lemma rebalance_right_BST : forall (t : tree),
   BST t -> BST (rebalance_right t).
 Proof.
   intros t H. unfold rebalance_right. inversion H.
@@ -431,7 +431,7 @@ Proof.
       simpl. repeat split; assumption.
 Qed.
 
-Lemma ForallT_rebalance_right: forall (P : nat -> Prop) (t : tree),
+Lemma ForallT_rebalance_right : forall (P : nat -> Prop) (t : tree),
   ForallT t P ->
   ForallT (rebalance_right t) P.
 Proof.
@@ -452,7 +452,7 @@ Definition rebalance_left (t : tree) : tree :=
                   end
   end.
 
-Lemma rebalance_left_BST: forall (t : tree),
+Lemma rebalance_left_BST : forall (t : tree),
   BST t -> BST (rebalance_left t).
 Proof.
   intros t H. unfold rebalance_left. inversion H.
@@ -466,7 +466,7 @@ Proof.
       simpl. repeat split; assumption.
 Qed.
 
-Lemma ForallT_rebalance_left: forall (P : nat -> Prop) (t : tree),
+Lemma ForallT_rebalance_left : forall (P : nat -> Prop) (t : tree),
   ForallT t P ->
   ForallT (rebalance_left t) P.
 Proof.
@@ -485,7 +485,7 @@ Definition rebalance (t : tree) : tree :=
   | _ => t
   end.
 
-Theorem rebalance_BST: forall (t : tree),
+Theorem rebalance_BST : forall (t : tree),
   BST t -> BST (rebalance t).
 Proof.
   intros t H. unfold rebalance. inversion H.
@@ -495,7 +495,7 @@ Proof.
     + apply rebalance_left_BST; auto.
 Qed.
 
-Fixpoint insertAVL (t : tree) (v: nat): tree :=
+Fixpoint insertAVL (t : tree) (v : nat) : tree :=
   match t with
   | Nil => Node v Nil Nil
   | Node v' l r => if v <? v'
@@ -505,26 +505,26 @@ Fixpoint insertAVL (t : tree) (v: nat): tree :=
                         else t
   end.
 
-Lemma max_Sn_n: forall (n: nat),
+Lemma max_Sn_n : forall (n : nat),
   max (S n) n = S n.
 Proof.
   intros n. apply max_l. auto.
 Qed.
 
-Lemma max_n_Sn: forall (n: nat),
+Lemma max_n_Sn : forall (n : nat),
   max n (S n) = S n.
 Proof.
   intros n. rewrite Nat.max_comm. apply max_Sn_n.
 Qed.
 
-Lemma max_SSn_n: forall (n: nat),
+Lemma max_SSn_n : forall (n: nat),
   max (S (S n)) n = S ( S n).
 Proof.
   intros n. induction n as [| n' IHn']; auto.
   simpl. destruct n'; auto.
 Qed.
 
-Lemma insertAVL_height: forall (t : tree) (v: nat),
+Lemma insertAVL_height : forall (t : tree) (v: nat),
   BT t ->
   height (insertAVL t v) = S (height t) \/ height (insertAVL t v) = height t.
 Proof.
@@ -590,7 +590,7 @@ Proof.
             rewrite IHr; rewrite EQlr; left; rewrite Nat.max_id; rewrite Nat.max_comm;
             rewrite max_Sn_n; reflexivity |
             rewrite IHr; rewrite EQlr; right; reflexivity ]).
-         -- apply diff_Two in EQ.  destruct IHr. 
+         -- apply diff_Two in EQ. destruct IHr. 
             ++ rewrite EQlr in H. rewrite H in EQ.
                apply neq_succ_3_diag_l in EQ. inversion EQ.
             ++ rewrite EQlr in H. rewrite H in EQ. symmetry in EQ.
@@ -659,7 +659,7 @@ Proof.
              rewrite max_SSn_n; rewrite Nat.max_comm;
             rewrite max_Sn_n; reflexivity |
             rewrite IHr; rewrite EQlr; right; reflexivity ]).
-         -- apply diff_Two in EQ.  destruct IHr. 
+         -- apply diff_Two in EQ. destruct IHr. 
             ++ rewrite EQlr in H. rewrite H in EQ. symmetry in EQ.
                apply neq_succ_4_diag_l in EQ. inversion EQ.
             ++ rewrite EQlr in H. rewrite H in EQ.
@@ -687,7 +687,7 @@ Proof.
                        rewrite max_Sn_n in H. injection EQ2 as EQ2.
                        Arguments max : simpl nomatch. simpl.
                        assert (H': max (height l) (height t1_1) = height l).
-                       { rewrite  EQ. rewrite <- Nat.max_comm in EQ2.  rewrite <- EQ2.
+                       { rewrite EQ. rewrite <- Nat.max_comm in EQ2. rewrite <- EQ2.
                          rewrite <- Nat.max_assoc. rewrite Nat.max_id. reflexivity. }
                        rewrite H'. clear H'.
                        assert (H': max (height t1_2) (height t2) = height l).
@@ -754,7 +754,7 @@ Proof.
              rewrite IHr; rewrite EQlr; right; rewrite Nat.max_id;
             rewrite max_Sn_n; reflexivity |
              rewrite IHr; rewrite EQlr; right; reflexivity]).
-         -- apply diff_Two in EQ.  destruct IHr. 
+         -- apply diff_Two in EQ. destruct IHr. 
             ++ rewrite <- EQlr in H. rewrite H in EQ. symmetry in EQ.
                apply neq_succ_2_diag_l in EQ. inversion EQ.
             ++ rewrite EQlr in EQ. rewrite H in EQ. symmetry in EQ.
@@ -767,7 +767,7 @@ Proof.
        * simpl. right. reflexivity.
 Qed.
 
-Lemma rebalance_right_BT: forall (l r : tree) (v : nat),
+Lemma rebalance_right_BT : forall (l r : tree) (v : nat),
   BT l -> BT r -> height l = S (S (height r)) ->
   BT (rebalance_right (Node v l r)).
 Proof.
@@ -812,7 +812,7 @@ Proof.
       rewrite H7. rewrite H1. reflexivity.
 Qed.
 
-Lemma rebalance_left_BT: forall (l r : tree) (v : nat),
+Lemma rebalance_left_BT : forall (l r : tree) (v : nat),
   BT l -> BT r -> S (S (height l)) = height r ->
   BT (rebalance_left (Node v l r)).
 Proof.
@@ -834,7 +834,7 @@ Proof.
   - apply diff_One with (v:= v0) in H7. rewrite H7.
     unfold left_rotate. unfold right_rotate. destruct r1.
     + apply diff_One in H7. discriminate.
-    + apply diff_One in H7.  simpl in H1. simpl in H7. injection H7 as H7.
+    + apply diff_One in H7. simpl in H1. simpl in H7. injection H7 as H7.
       rewrite H7 in H1. rewrite max_Sn_n in H1. injection H1 as H1. inversion H5.
       * rewrite H13 in H7.
         rewrite Nat.max_id in H7. apply BT_Node_Eq.
@@ -848,23 +848,23 @@ Proof.
         -- simpl. rewrite H1. rewrite <- H7. rewrite H13.
            rewrite Nat.max_id. rewrite max_Sn_n. reflexivity.
       * rewrite H13 in H7. rewrite max_Sn_n in H7. apply BT_Node_Eq.
-        -- rewrite <- H13 in H7. rewrite  <- H7 in H1. apply BT_Node_Eq; auto.
+        -- rewrite <- H13 in H7. rewrite <- H7 in H1. apply BT_Node_Eq; auto.
         -- apply BT_Node_R; auto.
         -- simpl. rewrite H1. rewrite <- H7. rewrite H13. rewrite Nat.max_id.
            f_equal. apply max_n_Sn.
 Qed.
 
-Theorem insertAVL_BT: forall (t : tree) (v : nat),
+Theorem insertAVL_BT : forall (t : tree) (v : nat),
   BT t -> BT (insertAVL t v).
 Proof.
   intros t v H. induction H.
-  - simpl.  apply BT_Node_Eq; try apply BT_Empty. reflexivity.
+  - simpl. apply BT_Node_Eq; try apply BT_Empty. reflexivity.
   - simpl. destruct (v <? v0).
     + unfold rebalance. destruct (diff (Node v0 (insertAVL l v) r)) eqn:EQ.
         -- apply diff_Zero in EQ. apply BT_Node_Eq; auto.
         -- apply diff_One in EQ. apply BT_Node_L; auto.
         -- apply diff_MinusOne in EQ. apply BT_Node_R; auto.
-        --  apply diff_Two in EQ. apply rebalance_right_BT; auto.
+        -- apply diff_Two in EQ. apply rebalance_right_BT; auto.
         -- apply diff_MinusTwo in EQ. apply rebalance_left_BT; auto.
         -- apply (insertAVL_height l v) in H. destruct H.
            ++ rewrite <- H1 in H. apply diff_One with (v := v0) in H.
@@ -889,7 +889,7 @@ Proof.
         -- apply diff_Zero in EQ. apply BT_Node_Eq; auto.
         -- apply diff_One in EQ. apply BT_Node_L; auto.
         -- apply diff_MinusOne in EQ. apply BT_Node_R; auto.
-        --  apply diff_Two in EQ. apply rebalance_right_BT; auto.
+        -- apply diff_Two in EQ. apply rebalance_right_BT; auto.
         -- apply diff_MinusTwo in EQ. apply rebalance_left_BT; auto.
         -- apply (insertAVL_height l v) in H. destruct H.
            ++ rewrite <- H1 in H. apply diff_Zero with (v := v0) in H.
@@ -914,7 +914,7 @@ Proof.
         -- apply diff_Zero in EQ. apply BT_Node_Eq; auto.
         -- apply diff_One in EQ. apply BT_Node_L; auto.
         -- apply diff_MinusOne in EQ. apply BT_Node_R; auto.
-        --  apply diff_Two in EQ. apply rebalance_right_BT; auto.
+        -- apply diff_Two in EQ. apply rebalance_right_BT; auto.
         -- apply diff_MinusTwo in EQ. apply rebalance_left_BT; auto.
         -- apply (insertAVL_height l v) in H. destruct H.
            ++ rewrite H1 in H. apply diff_Two with (v := v0) in H.
@@ -936,36 +936,36 @@ Proof.
      * apply BT_Node_L; auto.
 Qed.
 
-Ltac match_contradiction exp :=
+Ltac detruct_contradiction exp :=
   try destruct exp; try contradiction; try (repeat (intros H; discriminate H)).
 
-Lemma insertAVL_not_Nil: forall (t : tree) (v : nat),
+Lemma insertAVL_not_Nil : forall (t : tree) (v : nat),
   insertAVL t v <> Nil.
 Proof.
   intros t v. induction t as [| v' l IHl r IHr]; simpl.
   - intros H. discriminate H.
   - destruct (v <? v').
-    + unfold rebalance. match_contradiction (diff (Node v' (insertAVL l v) r)).
+    + unfold rebalance. detruct_contradiction (diff (Node v' (insertAVL l v) r)).
       * unfold rebalance_right. destruct (diff (insertAVL l v));
-        unfold right_rotate; try match_contradiction (insertAVL l v);
-        try match_contradiction (left_rotate (Node v0 t1 t2)).
+        unfold right_rotate; try detruct_contradiction (insertAVL l v);
+        try detruct_contradiction (left_rotate (Node v0 t1 t2)).
       * unfold rebalance_left. destruct (diff r);
-        unfold left_rotate; try match_contradiction r;
-        try match_contradiction (right_rotate (Node v0 r1 r2)).
+        unfold left_rotate; try detruct_contradiction r;
+        try detruct_contradiction (right_rotate (Node v0 r1 r2)).
     + destruct (v' <? v); try (intros H; discriminate H).
       unfold rebalance. destruct (diff (Node v' (insertAVL l v) r));
-      try match_contradiction (diff (Node v' l (insertAVL r v)));
-      unfold rebalance_right; try match_contradiction (diff l);
-      unfold right_rotate; try match_contradiction l;
-      try match_contradiction (left_rotate (Node v0 l1 l2));
-      unfold rebalance_left; try match_contradiction (diff (insertAVL r v));
-      unfold left_rotate; try match_contradiction (insertAVL r v);
-      try match_contradiction (right_rotate (Node v0 t1 t2));
-      try match_contradiction (right_rotate (Node v1 t1 t2));
-      try match_contradiction (right_rotate (Node v2 t3 t4)).
+      try detruct_contradiction (diff (Node v' l (insertAVL r v)));
+      unfold rebalance_right; try detruct_contradiction (diff l);
+      unfold right_rotate; try detruct_contradiction l;
+      try detruct_contradiction (left_rotate (Node v0 l1 l2));
+      unfold rebalance_left; try detruct_contradiction (diff (insertAVL r v));
+      unfold left_rotate; try detruct_contradiction (insertAVL r v);
+      try detruct_contradiction (right_rotate (Node v0 t1 t2));
+      try detruct_contradiction (right_rotate (Node v1 t1 t2));
+      try detruct_contradiction (right_rotate (Node v2 t3 t4)).
 Qed.
 
-Lemma ForallT_rebalance: forall (P : nat -> Prop) (t : tree),
+Lemma ForallT_rebalance : forall (P : nat -> Prop) (t : tree),
   ForallT t P ->
   ForallT (rebalance t) P.
 Proof.
@@ -975,7 +975,7 @@ Proof.
   - apply ForallT_rebalance_left. auto.
 Qed.
 
-Lemma ForallT_insertAVL: forall (P : nat -> Prop) (t : tree) (v: nat),
+Lemma ForallT_insertAVL : forall (P : nat -> Prop) (t : tree) (v : nat),
   P v ->
   ForallT t P ->
   ForallT (insertAVL t v) P.
@@ -992,14 +992,14 @@ Proof.
       * simpl. repeat split; auto.
 Qed.
 
-Lemma ltb_symm: forall (n m : nat),
+Lemma ltb_symm : forall (n m : nat),
   (n < m) -> (m > n).
 Proof.
   intros n m H. induction n as [| n'];
   destruct m as [| m']; auto.
 Qed.
 
-Theorem insertAVL_BST: forall (t : tree) (v : nat),
+Theorem insertAVL_BST : forall (t : tree) (v : nat),
   BST t -> BST (insertAVL t v).
 Proof.
   intros t v H. induction H as [| v1 l1 r1 H1 IHl1 H2 IHr1 H3 H4]; simpl.
@@ -1015,7 +1015,7 @@ Proof.
       * constructor; auto.
 Qed.
 
-Theorem insertAVL_AVL:  forall (t : tree) (v : nat),
+Theorem insertAVL_AVL : forall (t : tree) (v : nat),
   AVL t -> AVL (insertAVL t v).
 Proof.
   unfold AVL. intros. destruct H. split.
